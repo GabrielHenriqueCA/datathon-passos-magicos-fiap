@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Models (modelo treinado pode ser grande)
+# models/*.joblib
+
+# Dados sensíveis (descomente se não quiser subir os dados)
+# data/
+
+# Temporários
+*.tmp
+_*.py
+_*.txt
+_*.md

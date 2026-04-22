@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python train_model.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python train_model.py)",
+      "Bash(python -c \"import sys; sys.stdout.reconfigure\\(encoding='utf-8'\\); exec\\(open\\('train_model.py', encoding='utf-8'\\).read\\(\\)\\)\")",
+      "Bash(python -c \"import joblib; a = joblib.load\\('models/risco_defasagem.joblib'\\); print\\('risco_defasagem keys:', list\\(a.keys\\(\\)\\)\\); r = a['resultados']['Random Forest']; print\\('acc_treino:', r['acc_treino']\\); print\\('accuracy:', r['accuracy']\\); print\\('f1_score:', r['f1_score']\\); print\\('roc_auc:', r['roc_auc']\\)\")",
+      "Bash(python -c \"import joblib; a = joblib.load\\('models/enquadramento_pedra.joblib'\\); print\\('enquadramento_pedra keys:', list\\(a.keys\\(\\)\\)\\); r = a['resultados']; print\\('acc_treino:', r['acc_treino']\\); print\\('accuracy:', r['accuracy']\\); print\\('f1_weighted:', r['f1_weighted']\\); print\\('roc_auc:', r['roc_auc']\\); print\\('melhor_nome:', a['melhor_nome']\\)\")",
+      "Bash(python -c \"import joblib; a = joblib.load\\('models/risco_evasao.joblib'\\); print\\('risco_evasao keys:', list\\(a.keys\\(\\)\\)\\); mn = a['melhor_nome']; r = a['resultados'][mn]; print\\('melhor_nome:', mn\\); print\\('acc_treino:', r['acc_treino']\\); print\\('accuracy:', r['accuracy']\\); print\\('f1_score:', r['f1_score']\\); print\\('roc_auc:', r['roc_auc']\\)\")",
+      "Bash(python -m py_compile app.py)",
+      "Bash(python -m py_compile train_model.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app.py'\\).read\\(\\)\\); print\\('app.py OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app.py', encoding='utf-8'\\).read\\(\\)\\); print\\('app.py OK'\\)\")",
+      "Bash(python *)",
+      "Bash(awk -F: '{if \\($1+0 > 2900\\) print}')"
+    ]
+  }
+}

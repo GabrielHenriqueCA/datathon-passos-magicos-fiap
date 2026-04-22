@@ -1,0 +1,23 @@
+{
+  "melhor_nome": "Gradient Boosting",
+  "acc_treino": 1.0,
+  "acc_teste": 0.9011627906976745,
+  "f1_score": 0.5142857142857142,
+  "recall": 0.391304347826087,
+  "precision": 0.75,
+  "roc_auc": 0.8613948059527283,
+  "todos": {
+    "Random Forest": {
+      "accuracy": 0.8430232558139535,
+      "f1_score": 0.47058823529411764,
+      "roc_auc": 0.8482637875693027,
+      "cv_auc": 0.8912402738873327
+    },
+    "Gradient Boosting": {
+      "accuracy": 0.9011627906976745,
+      "f1_score": 0.5142857142857142,
+      "roc_auc": 0.8613948059527283,
+      "cv_auc": 0.8969257703081233
+    }
+  }
+}
