@@ -13,7 +13,12 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('app.py'\\).read\\(\\)\\); print\\('app.py OK'\\)\")",
       "Bash(python -c \"import ast; ast.parse\\(open\\('app.py', encoding='utf-8'\\).read\\(\\)\\); print\\('app.py OK'\\)\")",
       "Bash(python *)",
-      "Bash(awk -F: '{if \\($1+0 > 2900\\) print}')"
+      "Bash(awk -F: '{if \\($1+0 > 2900\\) print}')",
+      "Bash(python3 *)",
+      "Bash(del *)",
+      "Bash(rm -f __pycache__/app.cpython-314.pyc __pycache__/train_model.cpython-314.pyc)",
+      "Bash(rmdir __pycache__)",
+      "Bash(rm -f generate_notebook.py nb_audit.txt nb_eda_cells.txt nb_eda_full.json)"
     ]
   }
 }

@@ -1,31 +1,55 @@
 # CONTEXT — Datathon Passos Mágicos
-_Última atualização: 2026-04-22 — Sessão 9 (Correção de leakage no modelo Churn — target real de evasão via CSV longitudinal)_
+_Última atualização: 2026-04-22 — Sessão 12 (Limpeza do projeto — arquivos temporários removidos)_
 
-## Estrutura do projeto
+## Estrutura do projeto (estado limpo após Sessão 12)
 
 ```
 Datathon/
-├── app.py                 ← Streamlit (apenas consome .joblib — NÃO treina) — 3335 linhas
-├── train_model.py         ← Script de treinamento autônomo (sem imports de app.py)
+├── app.py                 ← Streamlit (apenas consome .joblib — NÃO treina)
+├── train_model.py         ← Script de treinamento autônomo
 ├── requirements.txt       ← pandas, numpy, sklearn, streamlit, plotly, joblib, openpyxl
 ├── README.md
-├── .streamlit/config.toml ← Tema claro com cores da PM (laranja #EE8133, fundo #FAFAFA)
-├── assets/logo.png
+├── CONTEXT.md             ← Referência interna (não faz parte da entrega)
+├── .gitignore
+├── .streamlit/
+│   └── config.toml        ← Tema claro com cores da PM (laranja #EE8133, fundo #FAFAFA)
+├── assets/
+│   └── logo.png           ← Usada pelo app.py
 ├── data/
-│   ├── PEDE_PASSOS_DATASET_FIAP.csv   ← Longitudinal 2020-2022 (1.349 alunos, wide format)
-│   └── BASE DE DADOS PEDE 2024 - DATATHON.xlsx ← Principal (860 alunos, 42 colunas)
+│   ├── PEDE_PASSOS_DATASET_FIAP.csv          ← Longitudinal 2020-2022 (1.349 alunos)
+│   └── BASE DE DADOS PEDE 2024 - DATATHON.xlsx  ← Principal (860 alunos, 42 colunas)
 ├── docs/
-│   ├── POSTECH - Datathon - Fase 5 (1).pdf
-│   └── Dicionário Dados Datathon.pdf
+│   ├── POSTECH - Datathon - Fase 5 (1).pdf  ← Enunciado do case
+│   ├── Dicionário Dados Datathon.pdf         ← Dicionário de variáveis
+│   └── project_banner.png                    ← Asset de documentação
 ├── models/
 │   ├── risco_defasagem.joblib       ← Random Forest (acc=69.8%, F1=82.2%, AUC=0.66)
-│   ├── enquadramento_pedra.joblib   ← Random Forest (acc_test=79.1%, AUC=0.929) — sem INDE/IAN
-│   ├── ponto_virada.joblib          ← Gradient Boosting (acc_test=90.1%, AUC=0.861) — sem IPV/INDE
-│   ├── churn.joblib                 ← Random Forest (acc_test=80.2%, AUC=87.8%) — target=evasão real (CSV longitudinal)
-│   └── ponto_virada_metrics.json    ← Métricas JSON do modelo PV
+│   ├── risco_defasagem_metrics.json ← ⚠️ AUSENTE — gerado pelo notebook (executar)
+│   ├── enquadramento_pedra.joblib   ← Random Forest (acc=79.1%, AUC=0.929) — sem INDE/IAN
+│   ├── enquadramento_pedra_metrics.json ← ⚠️ AUSENTE — gerado pelo notebook (executar)
+│   ├── ponto_virada.joblib          ← Gradient Boosting (acc=90.1%, AUC=0.861) — sem IPV/INDE
+│   ├── ponto_virada_metrics.json    ← ✅ presente
+│   ├── churn.joblib                 ← Random Forest (acc=80.2%, AUC=87.8%) — evasão real
+│   └── churn_metrics.json           ← ⚠️ AUSENTE — gerado pelo notebook (executar)
 └── notebooks/
-    └── Analise_Completa_Passos_Magicos.ipynb
+    └── Analise_Completa_Passos_Magicos.ipynb  ← 60 células, 13 seções (sem outputs — executar)
+
+## Arquivos removidos na Sessão 12
+- generate_notebook.py  (script temporário da Sessão 11)
+- nb_audit.txt          (arquivo temporário de auditoria)
+- nb_eda_cells.txt      (temporário)
+- nb_eda_full.json      (temporário)
+- __pycache__/*.pyc     (cache Python)
 ```
+
+## Itens da lista de entrega ausentes no projeto
+
+| Item | Status | Ação |
+|------|--------|------|
+| `tratamento_pede.py` | ❌ Não existe | Nunca foi criado — limpeza/tratamento está no notebook |
+| `BASE_PEDE_TRATADA.xlsx` | ❌ Não existe | Dataset tratado não é gerado separado |
+| `models/*_metrics.json` (3 de 4) | ⚠️ Ausentes | Executar notebook → Kernel → Restart & Run All |
+| Outputs do notebook | ⚠️ Ausentes | Executar notebook e salvar com outputs |
 
 ## Arquitetura final (Sessão 5)
 
@@ -138,13 +162,22 @@ app.py  ──carrega──►  models/*.joblib  ──serve──►  Streamlit
 
 **Observação de classe:** 87% dos alunos não atingiu PV → class_weight='balanced' para Gradient Boosting. AUC=0.86 confirma boa capacidade discriminativa apesar da assimetria.
 
+**Tentativas de regularização (Sessão 12) — meta: treino < 95%, gap < 8pp, AUC > 0.82:**
+
+| Tentativa | Params extras | Acc Treino | Acc Teste | Gap | AUC | Meta |
+|-----------|--------------|-----------|----------|-----|-----|------|
+| T1 | min_samples_leaf=10, max_features='sqrt' | 98.7% | 89.5% | 9.2pp | 0.857 | ❌ treino > 95% |
+| T2 | max_depth=3, min_samples_leaf=15, max_features='sqrt' | 95.8% | 89.5% | 6.3pp | 0.854 | ❌ treino > 95% (por 0.8pp) |
+
+Decisão: modelo original mantido (gap 9.9pp < limite 10pp). T2 ficou a 0.78pp do critério treino < 95% com gap 6.3pp — caso o avaliador exija, executar com `min_samples_leaf=20` ou `max_depth=2`.
+
 ## Tabela resumo dos modelos
 
 | Modelo | Algoritmo | Acc Treino | Acc Teste | AUC | Gap | Status |
 |--------|-----------|-----------|----------|-----|-----|--------|
 | Risco Defasagem | Random Forest | 69.9% | 69.8% | 0.66 | 0.1pp | ✅ Saudável |
 | Enquadramento Pedra | Random Forest | 88.3% | 79.1% | 0.929 | 9.3pp | ✅ Sem leakage |
-| Ponto de Virada | Gradient Boosting | 100% | 90.1% | 0.861 | 9.9pp | ✅ Sem leakage (sem IPV/INDE) |
+| Ponto de Virada | Gradient Boosting | 100% | 90.1% | 0.861 | 9.9pp | ✅ Sem leakage (sem IPV/INDE) — regularização tentada (2 tentativas, meta não atingida) |
 | Risco de Evasão (Churn) | Random Forest | 81.2% | 80.2% | 0.878 | 1.0pp | ✅ Target=evasão real, sem leakage |
 | Risco de Evasão | — (regras) | — | — | — | — | ✅ Sistema determinístico (5 sinais) |
 
@@ -175,12 +208,52 @@ app.py  ──carrega──►  models/*.joblib  ──serve──►  Streamlit
 
 ## Estado das entregas obrigatórias
 
-- [x] **Limpeza e análise de dados** — app.py + notebook (63 células, 11 análises)
+- [x] **Limpeza e análise de dados** — app.py + notebook (60 células, 13 seções, 11 análises EDA)
 - [ ] **Apresentação gerencial (PPT/PDF)** — **AUSENTE.** ⏸ em pausa
-- [x] **Notebook modelo preditivo** — `Analise_Completa_Passos_Magicos.ipynb`
-- [x] **App Streamlit** — `app.py` com 7 tabs, 2 modelos ML + 1 sistema de alerta
+- [x] **Notebook modelo preditivo** — `Analise_Completa_Passos_Magicos.ipynb` — **REESCRITO (Sessão 11)**
+- [x] **App Streamlit** — `app.py` com 7 tabs, 3 modelos ML + 1 sistema de alerta
 - [ ] **Deploy Community Cloud** — ⏸ em pausa
 - [ ] **Vídeo (até 5 min)** — **AUSENTE.** ⏸ em pausa
+
+## Notebook — Estado após Sessão 11
+
+### Estrutura (60 células: 27 markdown + 33 code)
+
+| # | Seção | Status |
+|---|-------|--------|
+| 1 | Configuração do Ambiente | ✅ Glossário + paleta CORES + matplotlib config |
+| 2 | Carregamento dos Dados | ✅ CSV longitudinal + XLSX 2024 |
+| 3 | EDA — 11 perguntas | ✅ Q1-Q8 + Q10 + Q11 (Q9 = seções de modelos) |
+| 4 | Limpeza e Tratamento | ✅ Análise de nulos + estratégia de preenchimento |
+| 5 | Feature Engineering | ✅ Encodings + features derivadas + anti-leakage |
+| 6 | Modelo 1 — Risco de Defasagem | ✅ RF + calibração threshold + ROC + FI |
+| 7 | Modelo 2 — Enquadramento de Pedra | ✅ RF vs GB + multiclasse + ROC OvR |
+| 8 | Modelo 3 — Ponto de Virada | ✅ GB + classe desbalanceada + AUC |
+| 9 | Modelo 4 — Risco de Evasão | ✅ RF + target real (CSV longitudinal) |
+| 10 | Consolidação dos Artefatos | ✅ Verifica 4 .joblib + 4 _metrics.json |
+| 11 | Teste de Integração Final | ✅ Carrega e testa todos os 4 modelos |
+| 12 | Conclusões | ✅ Tabela de métricas + limitações + impacto |
+
+### Artefatos gerados pelo notebook
+
+| Arquivo | Gerado em |
+|---------|----------|
+| `models/risco_defasagem.joblib` | Seção 6 |
+| `models/risco_defasagem_metrics.json` | Seção 6 |
+| `models/enquadramento_pedra.joblib` | Seção 7 |
+| `models/enquadramento_pedra_metrics.json` | Seção 7 |
+| `models/ponto_virada.joblib` | Seção 8 |
+| `models/ponto_virada_metrics.json` | Seção 8 |
+| `models/churn.joblib` | Seção 9 |
+| `models/churn_metrics.json` | Seção 9 |
+
+### Como executar
+```bash
+cd notebooks
+jupyter notebook Analise_Completa_Passos_Magicos.ipynb
+# Kernel → Restart & Run All
+# Aguardar ~5-10 min para treino dos 4 modelos
+```
 
 ## Gaps e prioridades
 
@@ -190,13 +263,17 @@ app.py  ──carrega──►  models/*.joblib  ──serve──►  Streamlit
 3. **Deploy no Streamlit Community Cloud** ⏸ em pausa
 
 ### ALTO (qualidade técnica)
-4. **Notebook sem outputs:** executar e salvar com outputs para avaliação
+4. **Notebook sem outputs:** executar (Restart & Run All) e salvar com outputs para avaliação
 
 ### MÉDIO
 5. **Documentar sistema de alerta na apresentação:** explicar por que ML foi descartado para evasão (AUC=0.51) e a abordagem determinística é mais honesta e igualmente acionável
 
 ## Histórico de decisões
 
+- **Limpeza do projeto (Sessão 12):** Removidos 5 itens temporários: `generate_notebook.py` (script da Sessão 11), `nb_audit.txt`, `nb_eda_cells.txt`, `nb_eda_full.json` (arquivos de auditoria do subagente Explore), e `__pycache__/*.pyc`. Total liberado: ~324 KB. `__pycache__/` ficou vazio mas travado pelo Windows (já está no .gitignore, não afeta o repo). Projeto está limpo e pronto para entrega.
+- **Regularização Ponto de Virada — sem sucesso (Sessão 12):** Duas tentativas de reduzir overfitting do modelo PV (GB, treino=100%, gap=9.9pp). T1: adicionado min_samples_leaf=10, max_features='sqrt' → treino=98.7%, gap=9.2pp (meta não atingida). T2: max_depth=3, min_samples_leaf=15, max_features='sqrt' → treino=95.8%, gap=6.3pp, AUC=0.854 (treino 0.8pp acima do limite de 95%). Meta (treino<95%, gap<8pp, AUC>0.82) não atingida em 2 tentativas. Modelo original mantido (gap 9.9pp < limite 10pp). T2 demonstra que a regularização reduce o gap de 9.9pp para 6.3pp com AUC preservado — candidato válido se meta for flexibilizada para treino<96%.
+- **Reescrita completa do Notebook (Sessão 11):** Notebook reestruturado de 63 células (modelos errados, sem outputs) para 60 células com 13 seções obrigatórias: 11 perguntas EDA respondidas com interpretações, 4 modelos corretos espelhando train_model.py, geração de 8 artefatos (4 .joblib + 4 _metrics.json incluindo os 3 metrics.json que faltavam).
+- **Correção de bugs na interface (Sessão 10):** Resolvidos dois erros na aplicação Streamlit. (1) O erro `StreamlitAPIException` de "widget instantiated" nos botões da aba "Modelos Preditivos" foi corrigido através da substituição da alteração direta do estado por funções de callback (`on_click=_set_nav`). (2) O erro de validação de cor no velocímetro (gauge) do Plotly (`ValueError: Invalid value received for the 'color' property`) foi resolvido convertendo os códigos hexadecimais com alpha channel (ex: `#D84C5118`) para o formato `rgba(216, 76, 81, 0.1)`, que é estritamente suportado pela biblioteca.
 - **Correção leakage Churn — target real de evasão (Sessão 9):** Modelo `churn.joblib` reconstruído com target real: aluno presente em ano N e ausente em ano N+1 no CSV longitudinal (transições 2020→2021 e 2021→2022). 499 casos reais de evasão em 1.411 observações (35.4% positivo). Features: IAA, IEG, IPS, IDA, IPV, IAN, FASE, ANOS_PM, PEDRA_NUM, MEDIA_INDICADORES. Random Forest, acc_teste=80.2%, AUC=87.8%, gap=1.0pp. Modelo anterior (acc=92.4%, AUC=95.1%) era leakage indireto — o target EM_ALERTA era uma regra construída pelos próprios avaliadores, não um fenômeno real. App.py atualizado: features preparação (removido GENERO/INSTITUICAO/IPP, adicionado MEDIA_INDICADORES), descrição gerencial, título da aba ("Risco de Permanência" → "Risco de Evasão"), texto explicativo menciona 499 casos históricos reais.
 - **Integração Modelo Churn / Risco de Permanência (Sessão 8):** Novo modelo `churn.joblib` treinado com Random Forest (acc=92.4%, AUC=95.1%). Target = EM_ALERTA (N_SINAIS ≥ 2 no sistema de 5 sinais). Features excluem IEG, IPS, IDA, INDE para evitar leakage direto — usam IAA, IAN, IPP, IPV, ANOS_PM, FASE, PEDRA_NUM, notas. Classe `ModeloChurn` + `carregar_modelo_churn()` adicionadas ao app.py. Página "🚨 Risco de Evasão" reestruturada em 2 colunas (3:2): col1 = sistema de alertas intacto, col2 = IA com distribuição de risco + consulta individual + texto explicativo. Rodapé colapsável com recomendações de dados para melhorar o modelo. Card "🔔 Risco de Permanência" adicionado como 4ª aba em Modelos Preditivos (botão navega para Risco de Evasão). treinar_churn() adicionado ao train_model.py e chamado no __main__.
 - **Velocímetro nas páginas de aluno individual (Sessão 7):** Adicionado `go.Indicator` (Plotly gauge) em Visão 360° do Aluno e Predição Individual. Em 360°, o gauge exibe o INDE real do aluno (linha do df_xlsx) ao lado direito do header, com label dinâmica (4 faixas: 0-4 / 4-6 / 6-8 / 8-10). Em Predição Individual, o gauge exibe `f_media_ind` (média aritmética dos 7 indicadores digitados) como estimativa de desenvolvimento — aparece após submit do formulário, no topo dos resultados. Layout em 2 colunas: col1 = info/título, col2 = gauge.

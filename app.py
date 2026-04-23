@@ -1595,6 +1595,9 @@ elif pagina == "🤖 Modelos Preditivos":
     # ── ABA 1: RISCO DE DEFASAGEM ─────────────────────────────────────────────
     modelo = carregar_modelo_treinado()
 
+    def _set_nav(page):
+        st.session_state.nav_radio = page
+
     with aba_def:
         st.markdown("""
         <div style="background:#FFF8F0; border-left:5px solid #EE8133; border-radius:10px;
@@ -1620,9 +1623,8 @@ elif pagina == "🤖 Modelos Preditivos":
         """, unsafe_allow_html=True)
 
         if st.button("→ Usar este sistema (Predição Individual)", key="btn_usar_def",
-                     use_container_width=True, type="primary"):
-            st.session_state.nav_radio = "🧑‍🎓 Predição Individual"
-            st.rerun()
+                     use_container_width=True, type="primary", on_click=_set_nav, args=("🧑‍🎓 Predição Individual",)):
+            pass
 
         if modelo is not None and modelo.resultados:
             with st.expander("➕ Detalhes para equipe técnica"):
@@ -1681,9 +1683,8 @@ elif pagina == "🤖 Modelos Preditivos":
         """, unsafe_allow_html=True)
 
         if st.button("→ Usar este sistema (Predição Individual)", key="btn_usar_pedra",
-                     use_container_width=True, type="primary"):
-            st.session_state.nav_radio = "🧑‍🎓 Predição Individual"
-            st.rerun()
+                     use_container_width=True, type="primary", on_click=_set_nav, args=("🧑‍🎓 Predição Individual",)):
+            pass
 
         st.markdown("---")
         st.markdown("#### Como os alunos estão distribuídos hoje")
@@ -1762,9 +1763,8 @@ elif pagina == "🤖 Modelos Preditivos":
         """, unsafe_allow_html=True)
 
         if st.button("→ Usar este sistema (Predição Individual)", key="btn_usar_pv",
-                     use_container_width=True, type="primary"):
-            st.session_state.nav_radio = "🧑‍🎓 Predição Individual"
-            st.rerun()
+                     use_container_width=True, type="primary", on_click=_set_nav, args=("🧑‍🎓 Predição Individual",)):
+            pass
 
         modelo_pv_m = carregar_modelo_pv()
         if modelo_pv_m is not None:
@@ -1834,9 +1834,8 @@ elif pagina == "🤖 Modelos Preditivos":
         """, unsafe_allow_html=True)
 
         if st.button("→ Ver análise completa (Risco de Evasão)", key="btn_usar_churn",
-                     use_container_width=True, type="primary"):
-            st.session_state.nav_radio = "🚨 Risco de Evasão"
-            st.rerun()
+                     use_container_width=True, type="primary", on_click=_set_nav, args=("🚨 Risco de Evasão",)):
+            pass
 
         if modelo_churn_m is not None:
             with st.expander("➕ Detalhes para equipe técnica"):
@@ -2907,9 +2906,9 @@ elif pagina == "👤 Visão 360° do Aluno":
                     'bgcolor': 'rgba(0,0,0,0)',
                     'bordercolor': '#EE8133',
                     'steps': [
-                        {'range': [0, 4], 'color': '#D84C5118'},
-                        {'range': [4, 7], 'color': '#F4B41A18'},
-                        {'range': [7, 10], 'color': '#27AE6018'},
+                        {'range': [0, 4], 'color': 'rgba(216, 76, 81, 0.1)'},
+                        {'range': [4, 7], 'color': 'rgba(244, 180, 26, 0.1)'},
+                        {'range': [7, 10], 'color': 'rgba(39, 174, 96, 0.1)'},
                     ],
                     'threshold': {'line': {'color': '#EE8133', 'width': 4}, 'thickness': 0.85, 'value': _score_360},
                 }
@@ -3219,9 +3218,9 @@ elif pagina == "🧑‍🎓 Predição Individual":
                     'bgcolor': 'rgba(0,0,0,0)',
                     'bordercolor': '#EE8133',
                     'steps': [
-                        {'range': [0, 4], 'color': '#D84C5118'},
-                        {'range': [4, 7], 'color': '#F4B41A18'},
-                        {'range': [7, 10], 'color': '#27AE6018'},
+                        {'range': [0, 4], 'color': 'rgba(216, 76, 81, 0.1)'},
+                        {'range': [4, 7], 'color': 'rgba(244, 180, 26, 0.1)'},
+                        {'range': [7, 10], 'color': 'rgba(39, 174, 96, 0.1)'},
                     ],
                     'threshold': {'line': {'color': '#EE8133', 'width': 4}, 'thickness': 0.85, 'value': _score_form},
                 }
