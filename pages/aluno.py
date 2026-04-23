@@ -20,6 +20,12 @@ _CSS = """
 [data-testid="stSidebarNav"] { display: none !important; }
 [data-testid="stSidebarNav"] + div hr { display: none !important; }
 
+/* Remove espaço extra no topo do sidebar */
+[data-testid="stSidebar"] > div:first-child { padding-top: 0rem !important; }
+[data-testid="stSidebar"] .block-container { padding-top: 0.5rem !important; }
+[data-testid="stSidebar"] > div > div > div > div:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
+
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {

@@ -20,7 +20,8 @@ _Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes 
 5. **Página "⚙️ Conta"** — adicionada como última opção em ambos os menus (admin e aluno); implementada em `pages/conta.py`; botão "Encerrar Sessão" limpa todo o session_state; mostra usuário, tempo conectado, perfil e hora de login
 6. **`login_time` salvo no session_state** no momento do login bem-sucedido (`datetime.now()`)
 7. **Botão Sair removido do sidebar** — substituído pela página Conta
-8. **Logo na tela de login** — tenta `assets/logo_passos_magicos.png`, fallback para `assets/logo.png`; título "Passos Mágicos" e subtítulo acima do card de login
+8. **Logo na tela de login** — base64-encoded inline no HTML (sem `st.image()`), `mix-blend-mode:screen` + `filter:drop-shadow` para fundo transparente sobre `#0D1B2A`
+9. **Espaço extra no topo do sidebar removido** — CSS `padding-top:0` em `[data-testid="stSidebar"] > div:first-child` adicionado em app.py e pages/aluno.py
 
 ---
 

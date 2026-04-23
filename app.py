@@ -16,6 +16,7 @@ from plotly.subplots import make_subplots
 import os
 import warnings
 import joblib
+import base64
 from datetime import datetime
 from pathlib import Path
 
@@ -694,13 +695,24 @@ def _render_login():
     </style>
     """, unsafe_allow_html=True)
 
+    _logo_b64 = None
+    for _lp in ["assets/logo_passos_magicos.png", "assets/logo.png"]:
+        if Path(_lp).exists():
+            with open(_lp, "rb") as _f:
+                _logo_b64 = base64.b64encode(_f.read()).decode()
+            break
+    _logo_tag = (
+        f'<img src="data:image/png;base64,{_logo_b64}" '
+        'style="width:140px; background:transparent; border:none; '
+        'filter: drop-shadow(0 0 8px rgba(244,162,97,0.3)); mix-blend-mode:screen;">'
+    ) if _logo_b64 else ''
+
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
-        for _lp in ["assets/logo_passos_magicos.png", "assets/logo.png"]:
-            if Path(_lp).exists():
-                st.image(_lp, width=160)
-                break
-        st.markdown("""
+        st.markdown(f"""
+        <div style="text-align:center; margin-bottom:16px;">
+            {_logo_tag}
+        </div>
         <h1 style="text-align:center; color:#F4A261; margin:12px 0 4px 0">Passos Mágicos</h1>
         <p style="text-align:center; color:#8AAFC7; margin:0 0 24px 0; font-size:0.9rem">
             Plataforma de Análise Educacional
@@ -968,6 +980,21 @@ st.markdown("""
     }
     section[data-testid="stSidebar"] hr {
         border-color: rgba(255,255,255,0.15) !important;
+    }
+
+    /* ═══ Remove espaço extra no topo do sidebar ═══ */
+    [data-testid="stSidebar"] > div:first-child {
+        padding-top: 0rem !important;
+    }
+    [data-testid="stSidebar"] .block-container {
+        padding-top: 0.5rem !important;
+    }
+    [data-testid="stSidebar"] > div > div > div > div:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    section[data-testid="stSidebar"] > div {
+        padding-top: 1rem !important;
     }
 
     /* ═══ Branding — Ocultar menu/footer/deploy ═══ */
