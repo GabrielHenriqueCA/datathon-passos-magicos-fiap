@@ -734,11 +734,18 @@ if st.session_state.get('role') == 'aluno':
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
+        pagina_aluno = st.radio(
+            "🧭 Navegação",
+            ["🏠 Meu Painel", "📝 Minhas Notas", "🎮 Missões & Badges", "🏆 Ranking"],
+            label_visibility="collapsed",
+            key="nav_aluno",
+        )
+        st.markdown("---")
         if st.button("🚪 Sair", key="logout_aluno"):
             for k in ['logged_in', 'role', 'username', 'aluno_key']:
                 st.session_state.pop(k, None)
             st.rerun()
-    _render_aluno(aluno_key, aluno_data)
+    _render_aluno(aluno_key, aluno_data, pagina_aluno)
     st.stop()
 
 # =============================================================================
@@ -1177,7 +1184,7 @@ with st.sidebar:
     st.markdown("---")
 
     pagina = st.radio(
-        "Menu",
+        "🧭 Navegação",
         ["📋 Apresentação", "📊 Visão Geral", "🔍 Análise por Indicador",
          "🤖 Modelos Preditivos", "🚨 Risco de Evasão",
          "👤 Visão 360° do Aluno", "🧑‍🎓 Predição Individual"],

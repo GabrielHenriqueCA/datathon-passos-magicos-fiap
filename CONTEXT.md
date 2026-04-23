@@ -1,5 +1,23 @@
 # CONTEXT — Datathon Passos Mágicos
-_Última atualização: 2026-04-23 — Sessão 13 (Auditoria cruzada completa)_
+_Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes cirúrgicos)_
+
+## Sessão 14 — Login system e ajustes de UI
+
+### Arquitetura de login (adicionada em Sessão 14)
+- `data/mock_alunos.py` — USERS dict + ALUNOS_MOCK dict (3 alunos mock)
+- `pages/aluno.py` — visão gamificada do aluno (dark theme #0D1B2A)
+- `pages/admin.py` — placeholder (admin view segue em app.py)
+- `app.py` — gate de login após `st.set_page_config()` via `st.session_state`
+  - `role == 'aluno'` → roteia para `pages/aluno.render()` + `st.stop()`
+  - `role == 'admin'` → executa fluxo normal do dashboard
+- Credenciais: `admin/admin123`, `aluno01-03/1234`
+
+### Ajustes cirúrgicos (Sessão 14)
+1. **Menu lateral filtrado por perfil**: admin vê 7 opções do dashboard; aluno vê 4 opções (`🏠 Meu Painel`, `📝 Minhas Notas`, `🎮 Missões & Badges`, `🏆 Ranking`) — roteamento por `if/elif` sem tabs
+2. **Header do aluno** — substituído por card dark (`#132233 → #0D1B2A`) com avatar circular (inicial do nome), cor #F4A261 no nome, borda `rgba(46,134,193,0.35)`
+3. **Botão Sair** presente em ambos os perfis no sidebar
+
+---
 
 ## Auditoria cruzada — Sessão 13 (resultado)
 
