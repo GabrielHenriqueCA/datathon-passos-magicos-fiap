@@ -17,6 +17,10 @@ _Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes 
 2. **Header do aluno** — substituído por card dark (`#132233 → #0D1B2A`) com avatar circular (inicial do nome), cor #F4A261 no nome, borda `rgba(46,134,193,0.35)`
 3. **Botão Sair** presente em ambos os perfis no sidebar
 4. **Navegação automática de pages/ suprimida** — `[ui] hideSidebarNav = true` em `.streamlit/config.toml` + CSS `[data-testid="stSidebarNav"] { display:none }` em app.py e pages/aluno.py como fallback
+5. **Página "⚙️ Conta"** — adicionada como última opção em ambos os menus (admin e aluno); implementada em `pages/conta.py`; botão "Encerrar Sessão" limpa todo o session_state; mostra usuário, tempo conectado, perfil e hora de login
+6. **`login_time` salvo no session_state** no momento do login bem-sucedido (`datetime.now()`)
+7. **Botão Sair removido do sidebar** — substituído pela página Conta
+8. **Logo na tela de login** — tenta `assets/logo_passos_magicos.png`, fallback para `assets/logo.png`; título "Passos Mágicos" e subtítulo acima do card de login
 
 ---
 

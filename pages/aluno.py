@@ -9,6 +9,7 @@ import plotly.express as px
 import joblib
 import numpy as np
 import os
+from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # CSS dark theme
@@ -571,3 +572,7 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+    elif pagina_aluno == "⚙️ Conta":
+        from pages.conta import render as _render_conta
+        _render_conta()

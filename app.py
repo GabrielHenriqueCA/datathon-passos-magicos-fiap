@@ -16,6 +16,8 @@ from plotly.subplots import make_subplots
 import os
 import warnings
 import joblib
+from datetime import datetime
+from pathlib import Path
 
 from sklearn.preprocessing import StandardScaler
 from data.mock_alunos import USERS, ALUNOS_MOCK
@@ -636,6 +638,8 @@ def calcular_alerta_evasao(row):
     return 'Baixo', sinais, descricoes
 
 
+from pages.conta import render as _render_conta
+
 # =============================================================================
 # CONFIGURAÇÃO DA PÁGINA
 # =============================================================================
@@ -690,8 +694,20 @@ def _render_login():
     </style>
     """, unsafe_allow_html=True)
 
+    col_l, col_c, col_r = st.columns([1, 2, 1])
+    with col_c:
+        for _lp in ["assets/logo_passos_magicos.png", "assets/logo.png"]:
+            if Path(_lp).exists():
+                st.image(_lp, width=160)
+                break
+        st.markdown("""
+        <h1 style="text-align:center; color:#F4A261; margin:12px 0 4px 0">Passos Mágicos</h1>
+        <p style="text-align:center; color:#8AAFC7; margin:0 0 24px 0; font-size:0.9rem">
+            Plataforma de Análise Educacional
+        </p>
+        """, unsafe_allow_html=True)
+
     st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-    st.markdown("<div class='login-title'>✨ Passos Mágicos</div>", unsafe_allow_html=True)
     st.markdown("<div class='login-sub'>Datathon Analytics — acesso restrito</div>", unsafe_allow_html=True)
 
     usuario = st.text_input("Usuário", key="login_user")
@@ -704,6 +720,7 @@ def _render_login():
             st.session_state['role']       = user_data['role']
             st.session_state['username']   = usuario
             st.session_state['aluno_key']  = user_data['aluno_key']
+            st.session_state['login_time'] = datetime.now()
             st.rerun()
         else:
             st.error("Usuário ou senha inválidos.")
@@ -736,15 +753,10 @@ if st.session_state.get('role') == 'aluno':
         st.markdown("---")
         pagina_aluno = st.radio(
             "🧭 Navegação",
-            ["🏠 Meu Painel", "📝 Minhas Notas", "🎮 Missões & Badges", "🏆 Ranking"],
+            ["🏠 Meu Painel", "📝 Minhas Notas", "🎮 Missões & Badges", "🏆 Ranking", "⚙️ Conta"],
             label_visibility="collapsed",
             key="nav_aluno",
         )
-        st.markdown("---")
-        if st.button("🚪 Sair", key="logout_aluno"):
-            for k in ['logged_in', 'role', 'username', 'aluno_key']:
-                st.session_state.pop(k, None)
-            st.rerun()
     _render_aluno(aluno_key, aluno_data, pagina_aluno)
     st.stop()
 
@@ -1191,7 +1203,7 @@ with st.sidebar:
         "🧭 Navegação",
         ["📋 Apresentação", "📊 Visão Geral", "🔍 Análise por Indicador",
          "🤖 Modelos Preditivos", "🚨 Risco de Evasão",
-         "👤 Visão 360° do Aluno", "🧑‍🎓 Predição Individual"],
+         "👤 Visão 360° do Aluno", "🧑‍🎓 Predição Individual", "⚙️ Conta"],
         label_visibility="collapsed",
         key="nav_radio",
     )
@@ -1205,12 +1217,6 @@ with st.sidebar:
         Data Analytics — Fase 5
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    if st.button("🚪 Sair", key="logout_admin"):
-        for k in ['logged_in', 'role', 'username', 'aluno_key']:
-            st.session_state.pop(k, None)
-        st.rerun()
 
 
 # =============================================================================
@@ -2853,3 +2859,6 @@ elif pagina == "🧑‍🎓 Predição Individual":
             with st.expander("➕ Detalhes dos Sinais de Risco"):
                 for s in sinais_f:
                     st.markdown(f"- ⚠️ {s}")
+
+elif pagina == "⚙️ Conta":
+    _render_conta()
