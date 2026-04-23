@@ -18,6 +18,7 @@ import warnings
 import joblib
 
 from sklearn.preprocessing import StandardScaler
+from data.mock_alunos import USERS, ALUNOS_MOCK
 
 warnings.filterwarnings('ignore')
 
@@ -646,6 +647,101 @@ st.set_page_config(
 )
 
 # =============================================================================
+# LOGIN — gate must come right after set_page_config
+# =============================================================================
+def _render_login():
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+        background-color: #0D1B2A !important;
+        font-family: 'Montserrat', sans-serif !important;
+    }
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="stHeader"]  { background: transparent !important; }
+    .login-box {
+        background: linear-gradient(135deg, #1A2B3C 0%, #0F2030 100%);
+        border: 1px solid #2A3F55;
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        max-width: 400px;
+        margin: 4rem auto 0;
+        text-align: center;
+    }
+    .login-title {
+        font-size: 1.5rem; font-weight: 800;
+        color: #F4B41A; margin-bottom: 0.3rem;
+    }
+    .login-sub {
+        font-size: 0.8rem; color: #7A8FA6; margin-bottom: 1.5rem;
+    }
+    label { color: #C8CDD8 !important; }
+    [data-testid="stTextInput"] > div > input {
+        background: #0D1B2A !important;
+        color: #E8EAF0 !important;
+        border: 1px solid #2A3F55 !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stButton"] > button {
+        background: #2D325E !important; color: #F4B41A !important;
+        border: 1px solid #4A4F7A !important; border-radius: 8px !important;
+        font-weight: 700 !important; width: 100% !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+    st.markdown("<div class='login-title'>✨ Passos Mágicos</div>", unsafe_allow_html=True)
+    st.markdown("<div class='login-sub'>Datathon Analytics — acesso restrito</div>", unsafe_allow_html=True)
+
+    usuario = st.text_input("Usuário", key="login_user")
+    senha   = st.text_input("Senha",   key="login_pass", type="password")
+
+    if st.button("Entrar"):
+        user_data = USERS.get(usuario)
+        if user_data and user_data['password'] == senha:
+            st.session_state['logged_in']  = True
+            st.session_state['role']       = user_data['role']
+            st.session_state['username']   = usuario
+            st.session_state['aluno_key']  = user_data['aluno_key']
+            st.rerun()
+        else:
+            st.error("Usuário ou senha inválidos.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style='text-align:center; margin-top:1.5rem; font-size:0.72rem; color:#3A5A7A;'>
+        admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
+    </div>
+    """, unsafe_allow_html=True)
+
+
+if not st.session_state.get('logged_in'):
+    _render_login()
+    st.stop()
+
+if st.session_state.get('role') == 'aluno':
+    from pages.aluno import render as _render_aluno
+    aluno_key = st.session_state['aluno_key']
+    aluno_data = ALUNOS_MOCK[aluno_key]
+    with st.sidebar:
+        st.image('assets/logo.png', use_container_width=True)
+        st.markdown("---")
+        st.markdown(f"""
+        <div style='text-align:center; color:#C8CDD8; font-size:0.82rem; padding:0.5rem 0;'>
+            👤 <strong>{aluno_data['nome']}</strong><br>
+            <span style='opacity:0.6;'>{aluno_data['pedra']} · Fase {aluno_data['fase']}</span>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("---")
+        if st.button("🚪 Sair", key="logout_aluno"):
+            for k in ['logged_in', 'role', 'username', 'aluno_key']:
+                st.session_state.pop(k, None)
+            st.rerun()
+    _render_aluno(aluno_key, aluno_data)
+    st.stop()
+
+# =============================================================================
 # CSS CUSTOMIZADO
 # =============================================================================
 st.markdown("""
@@ -1098,6 +1194,12 @@ with st.sidebar:
         Data Analytics — Fase 5
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    if st.button("🚪 Sair", key="logout_admin"):
+        for k in ['logged_in', 'role', 'username', 'aluno_key']:
+            st.session_state.pop(k, None)
+        st.rerun()
 
 
 # =============================================================================
