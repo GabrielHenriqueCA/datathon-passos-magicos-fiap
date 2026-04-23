@@ -23,6 +23,8 @@ _Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes 
 8. **Tela de login refeita** — sem `.login-box` container; tudo em `col2` de `st.columns([1,1.5,1])`; PIL remove pixels brancos da logo antes de base64-encodar; ordem: logo → título → subtítulo → inputs → botão; sem divs extras entre elementos
 9. **Espaço extra no topo do sidebar removido** — CSS `padding-top:0` em `[data-testid="stSidebar"] > div:first-child` adicionado em app.py e pages/aluno.py
 10. **`pages/conta.py` refatorado** — função única `_render_pagina_conta(nome, usuario, perfil_label, inicial, login_time)` usada por admin e aluno; layout e cores idênticos nos dois perfis; `render()` resolve os dados do session_state e chama a função compartilhada
+11. **CSS global antes do roteamento** — bloco CSS inserido entre o gate de login e o `if role == 'aluno'`; cobre sidebar dark, supressão de nav automática, remoção de espaço do topo, fundo `.stApp` e containers transparentes
+12. **Sidebar admin e aluno espelhados** — ambos usam `st.title` + `st.caption` + `st.divider` + `st.radio` + `st.divider` + `st.caption`; CSS de sidebar local removido de `pages/aluno.py` (herda do global)
 
 ---
 

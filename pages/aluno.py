@@ -16,16 +16,6 @@ from datetime import datetime
 # ---------------------------------------------------------------------------
 _CSS = """
 <style>
-/* Suprime navegação automática de pages/ */
-[data-testid="stSidebarNav"] { display: none !important; }
-[data-testid="stSidebarNav"] + div hr { display: none !important; }
-
-/* Remove espaço extra no topo do sidebar */
-[data-testid="stSidebar"] > div:first-child { padding-top: 0rem !important; }
-[data-testid="stSidebar"] .block-container { padding-top: 0.5rem !important; }
-[data-testid="stSidebar"] > div > div > div > div:first-child { margin-top: 0 !important; padding-top: 0 !important; }
-section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
-
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
@@ -33,10 +23,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     color: #E8EAF0 !important;
     font-family: 'Montserrat', sans-serif !important;
 }
-[data-testid="stSidebar"] {
-    background-color: #0A1520 !important;
-}
-[data-testid="stSidebar"] * { color: #C8CDD8 !important; }
 
 .aluno-card {
     background: linear-gradient(135deg, #1A2B3C 0%, #0F2030 100%);

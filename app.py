@@ -747,26 +747,52 @@ if not st.session_state.get('logged_in'):
     _render_login()
     st.stop()
 
+# CSS global — aplicado antes de qualquer roteamento de perfil
+st.markdown("""
+<style>
+[data-testid="stSidebarNav"] { display: none !important; }
+[data-testid="stSidebarNav"] + div hr { display: none !important; }
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0D1B2A 0%, #0f2236 100%) !important;
+    border-right: 1px solid rgba(46,134,193,0.35) !important;
+}
+[data-testid="stSidebar"] * { color: #CBD5DF !important; }
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 { color: #F4A261 !important; }
+
+[data-testid="stSidebar"] > div:first-child { padding-top: 0rem !important; }
+[data-testid="stSidebar"] .block-container { padding-top: 0.5rem !important; }
+section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
+
+.stApp {
+    background: linear-gradient(160deg, #0D1B2A 0%, #102030 60%, #0D1B2A 100%);
+    color: #E8EDF2;
+}
+
+.stApp [data-testid="stVerticalBlock"] > div { background: transparent !important; }
+div[data-testid="column"] { background: transparent !important; }
+[data-testid="stForm"] { background: transparent !important; border: none !important; }
+</style>
+""", unsafe_allow_html=True)
+
 if st.session_state.get('role') == 'aluno':
     from pages.aluno import render as _render_aluno
     aluno_key = st.session_state['aluno_key']
     aluno_data = ALUNOS_MOCK[aluno_key]
     with st.sidebar:
-        st.image('assets/logo.png', use_container_width=True)
-        st.markdown("---")
-        st.markdown(f"""
-        <div style='text-align:center; color:#C8CDD8; font-size:0.82rem; padding:0.5rem 0;'>
-            👤 <strong>{aluno_data['nome']}</strong><br>
-            <span style='opacity:0.6;'>{aluno_data['pedra']} · Fase {aluno_data['fase']}</span>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("---")
+        st.title("🎓 Passos Mágicos")
+        st.caption("Plataforma Educacional")
+        st.divider()
         pagina_aluno = st.radio(
             "🧭 Navegação",
             ["🏠 Meu Painel", "📝 Minhas Notas", "🎮 Missões & Badges", "🏆 Ranking", "⚙️ Conta"],
             label_visibility="collapsed",
             key="nav_aluno",
         )
+        st.divider()
+        st.caption("Desenvolvido para o Datathon Passos Mágicos")
     _render_aluno(aluno_key, aluno_data, pagina_aluno)
     st.stop()
 
@@ -1204,25 +1230,9 @@ with st.spinner("Carregando dados..."):
 # SIDEBAR LATERAL
 # =============================================================================
 with st.sidebar:
-    st.image('assets/logo.png', use_container_width=True)
-    st.markdown("""
-    <div style='text-align: center; margin-top: -0.5rem; margin-bottom: 0.5rem;'>
-        <span style='font-size: 0.8rem; font-weight: 600; letter-spacing: 1.5px; opacity: 0.8;'>DATATHON ANALYTICS</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    st.markdown(f"""
-    <div style='text-align: center; padding: 0.5rem 0;'>
-        <div style='font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; margin-bottom: 0.3rem;'>Dados Unificados</div>
-        <div style='font-size: 1.4rem; font-weight: 800; color: #F4B41A;'>{df_long.shape[0]:,} registros</div>
-        <div style='font-size: 0.72rem; opacity: 0.6; margin-top: 0.2rem;'>{df_csv.shape[0]:,} CSV + {df_xlsx.shape[0]:,} XLSX</div>
-        <div style='font-size: 0.68rem; opacity: 0.45; margin-top: 0.15rem;'>2020 · 2021 · 2022 · 2024</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
+    st.title("📊 Passos Mágicos")
+    st.caption("Plataforma de Análise Educacional")
+    st.divider()
 
     pagina = st.radio(
         "🧭 Navegação",
@@ -1233,15 +1243,8 @@ with st.sidebar:
         key="nav_radio",
     )
 
-    st.markdown("---")
-
-    st.markdown("""
-    <div style='text-align: center; color: rgba(255,255,255,0.45); font-size: 0.7rem; line-height: 1.6;'>
-        Desenvolvido para o<br>
-        <strong style='color: rgba(255,255,255,0.65);'>Datathon FIAP PosTech</strong><br>
-        Data Analytics — Fase 5
-    </div>
-    """, unsafe_allow_html=True)
+    st.divider()
+    st.caption("Desenvolvido para o Datathon Passos Mágicos")
 
 
 # =============================================================================
