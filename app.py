@@ -16,9 +16,6 @@ from plotly.subplots import make_subplots
 import os
 import warnings
 import joblib
-import base64
-from datetime import datetime
-from pathlib import Path
 
 from sklearn.preprocessing import StandardScaler
 from data.mock_alunos import USERS, ALUNOS_MOCK
@@ -639,8 +636,6 @@ def calcular_alerta_evasao(row):
     return 'Baixo', sinais, descricoes
 
 
-from pages.conta import render as _render_conta
-
 # =============================================================================
 # CONFIGURAÇÃO DA PÁGINA
 # =============================================================================
@@ -655,9 +650,6 @@ st.set_page_config(
 # LOGIN — gate must come right after set_page_config
 # =============================================================================
 def _render_login():
-    from PIL import Image
-    import io as _io
-
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
@@ -667,6 +659,22 @@ def _render_login():
     }
     [data-testid="stSidebar"] { display: none !important; }
     [data-testid="stHeader"]  { background: transparent !important; }
+    .login-box {
+        background: linear-gradient(135deg, #1A2B3C 0%, #0F2030 100%);
+        border: 1px solid #2A3F55;
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        max-width: 400px;
+        margin: 4rem auto 0;
+        text-align: center;
+    }
+    .login-title {
+        font-size: 1.5rem; font-weight: 800;
+        color: #F4B41A; margin-bottom: 0.3rem;
+    }
+    .login-sub {
+        font-size: 0.8rem; color: #7A8FA6; margin-bottom: 1.5rem;
+    }
     label { color: #C8CDD8 !important; }
     [data-testid="stTextInput"] > div > input {
         background: #0D1B2A !important;
@@ -682,118 +690,55 @@ def _render_login():
     </style>
     """, unsafe_allow_html=True)
 
-    # Build logo — strip white pixels for transparent background
-    _logo_b64 = None
-    for _lp in ["assets/logo_passos_magicos.png", "assets/logo.png"]:
-        if Path(_lp).exists():
-            try:
-                _img = Image.open(_lp).convert("RGBA")
-                _pixels = _img.getdata()
-                _img.putdata([
-                    (r, g, b, 0) if (r > 200 and g > 200 and b > 200) else (r, g, b, a)
-                    for r, g, b, a in _pixels
-                ])
-                _buf = _io.BytesIO()
-                _img.save(_buf, format="PNG")
-                _logo_b64 = base64.b64encode(_buf.getvalue()).decode()
-            except Exception:
-                with open(_lp, "rb") as _f:
-                    _logo_b64 = base64.b64encode(_f.read()).decode()
-            break
+    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+    st.markdown("<div class='login-title'>✨ Passos Mágicos</div>", unsafe_allow_html=True)
+    st.markdown("<div class='login-sub'>Datathon Analytics — acesso restrito</div>", unsafe_allow_html=True)
 
-    _logo_tag = (
-        f'<img src="data:image/png;base64,{_logo_b64}" '
-        'style="width:140px; background:transparent; border:none; box-shadow:none; '
-        'filter: drop-shadow(0 4px 16px rgba(244,162,97,0.35));">'
-    ) if _logo_b64 else ''
+    usuario = st.text_input("Usuário", key="login_user")
+    senha   = st.text_input("Senha",   key="login_pass", type="password")
 
-    col1, col2, col3 = st.columns([1, 1.5, 1])
-    with col2:
-        st.markdown(f"""
-        <div style="text-align:center; margin-top:48px; margin-bottom:0px">
-            {_logo_tag}
-            <h1 style="color:#F4A261; margin:16px 0 4px 0; font-size:2rem; font-weight:700">
-                Passos Mágicos
-            </h1>
-            <p style="color:#8AAFC7; margin:0 0 32px 0; font-size:0.95rem">
-                Plataforma de Análise Educacional
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+    if st.button("Entrar"):
+        user_data = USERS.get(usuario)
+        if user_data and user_data['password'] == senha:
+            st.session_state['logged_in']  = True
+            st.session_state['role']       = user_data['role']
+            st.session_state['username']   = usuario
+            st.session_state['aluno_key']  = user_data['aluno_key']
+            st.rerun()
+        else:
+            st.error("Usuário ou senha inválidos.")
 
-        usuario = st.text_input("Usuário", placeholder="Digite seu usuário", key="login_user")
-        senha   = st.text_input("Senha", type="password", placeholder="Digite sua senha", key="login_pass")
-
-        if st.button("Entrar", use_container_width=True, type="primary"):
-            user_data = USERS.get(usuario)
-            if user_data and user_data['password'] == senha:
-                st.session_state['logged_in']  = True
-                st.session_state['role']       = user_data['role']
-                st.session_state['username']   = usuario
-                st.session_state['aluno_key']  = user_data['aluno_key']
-                st.session_state['login_time'] = datetime.now()
-                st.rerun()
-            else:
-                st.error("Usuário ou senha inválidos.")
-
-        st.markdown("""
-        <div style='text-align:center; margin-top:1.2rem; font-size:0.72rem; color:#3A5A7A;'>
-            admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style='text-align:center; margin-top:1.5rem; font-size:0.72rem; color:#3A5A7A;'>
+        admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
+    </div>
+    """, unsafe_allow_html=True)
 
 
 if not st.session_state.get('logged_in'):
     _render_login()
     st.stop()
 
-# CSS global — aplicado antes de qualquer roteamento de perfil
-st.markdown("""
-<style>
-[data-testid="stSidebarNav"] { display: none !important; }
-[data-testid="stSidebarNav"] + div hr { display: none !important; }
-
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0D1B2A 0%, #0f2236 100%) !important;
-    border-right: 1px solid rgba(46,134,193,0.35) !important;
-}
-[data-testid="stSidebar"] * { color: #CBD5DF !important; }
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 { color: #F4A261 !important; }
-
-[data-testid="stSidebar"] > div:first-child { padding-top: 0rem !important; }
-[data-testid="stSidebar"] .block-container { padding-top: 0.5rem !important; }
-section[data-testid="stSidebar"] > div { padding-top: 1rem !important; }
-
-.stApp {
-    background: linear-gradient(160deg, #0D1B2A 0%, #102030 60%, #0D1B2A 100%);
-    color: #E8EDF2;
-}
-
-.stApp [data-testid="stVerticalBlock"] > div { background: transparent !important; }
-div[data-testid="column"] { background: transparent !important; }
-[data-testid="stForm"] { background: transparent !important; border: none !important; }
-</style>
-""", unsafe_allow_html=True)
-
 if st.session_state.get('role') == 'aluno':
     from pages.aluno import render as _render_aluno
     aluno_key = st.session_state['aluno_key']
     aluno_data = ALUNOS_MOCK[aluno_key]
     with st.sidebar:
-        st.title("🎓 Passos Mágicos")
-        st.caption("Plataforma Educacional")
-        st.divider()
-        pagina_aluno = st.radio(
-            "🧭 Navegação",
-            ["🏠 Meu Painel", "📝 Minhas Notas", "🎮 Missões & Badges", "🏆 Ranking", "⚙️ Conta"],
-            label_visibility="collapsed",
-            key="nav_aluno",
-        )
-        st.divider()
-        st.caption("Desenvolvido para o Datathon Passos Mágicos")
-    _render_aluno(aluno_key, aluno_data, pagina_aluno)
+        st.image('assets/logo.png', use_container_width=True)
+        st.markdown("---")
+        st.markdown(f"""
+        <div style='text-align:center; color:#C8CDD8; font-size:0.82rem; padding:0.5rem 0;'>
+            👤 <strong>{aluno_data['nome']}</strong><br>
+            <span style='opacity:0.6;'>{aluno_data['pedra']} · Fase {aluno_data['fase']}</span>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("---")
+        if st.button("🚪 Sair", key="logout_aluno"):
+            for k in ['logged_in', 'role', 'username', 'aluno_key']:
+                st.session_state.pop(k, None)
+            st.rerun()
+    _render_aluno(aluno_key, aluno_data)
     st.stop()
 
 # =============================================================================
@@ -801,10 +746,6 @@ if st.session_state.get('role') == 'aluno':
 # =============================================================================
 st.markdown("""
 <style>
-    /* ═══ Suprime navegação automática de pages/ ═══ */
-    [data-testid="stSidebarNav"] { display: none !important; }
-    [data-testid="stSidebarNav"] + div hr { display: none !important; }
-
     /* ═══ Google Fonts — Montserrat + Material Icons ═══ */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
     @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
@@ -1004,21 +945,6 @@ st.markdown("""
     }
     section[data-testid="stSidebar"] hr {
         border-color: rgba(255,255,255,0.15) !important;
-    }
-
-    /* ═══ Remove espaço extra no topo do sidebar ═══ */
-    [data-testid="stSidebar"] > div:first-child {
-        padding-top: 0rem !important;
-    }
-    [data-testid="stSidebar"] .block-container {
-        padding-top: 0.5rem !important;
-    }
-    [data-testid="stSidebar"] > div > div > div > div:first-child {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    section[data-testid="stSidebar"] > div {
-        padding-top: 1rem !important;
     }
 
     /* ═══ Branding — Ocultar menu/footer/deploy ═══ */
@@ -1230,21 +1156,50 @@ with st.spinner("Carregando dados..."):
 # SIDEBAR LATERAL
 # =============================================================================
 with st.sidebar:
-    st.title("📊 Passos Mágicos")
-    st.caption("Plataforma de Análise Educacional")
-    st.divider()
+    st.image('assets/logo.png', use_container_width=True)
+    st.markdown("""
+    <div style='text-align: center; margin-top: -0.5rem; margin-bottom: 0.5rem;'>
+        <span style='font-size: 0.8rem; font-weight: 600; letter-spacing: 1.5px; opacity: 0.8;'>DATATHON ANALYTICS</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    st.markdown(f"""
+    <div style='text-align: center; padding: 0.5rem 0;'>
+        <div style='font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; margin-bottom: 0.3rem;'>Dados Unificados</div>
+        <div style='font-size: 1.4rem; font-weight: 800; color: #F4B41A;'>{df_long.shape[0]:,} registros</div>
+        <div style='font-size: 0.72rem; opacity: 0.6; margin-top: 0.2rem;'>{df_csv.shape[0]:,} CSV + {df_xlsx.shape[0]:,} XLSX</div>
+        <div style='font-size: 0.68rem; opacity: 0.45; margin-top: 0.15rem;'>2020 · 2021 · 2022 · 2024</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
 
     pagina = st.radio(
-        "🧭 Navegação",
+        "Menu",
         ["📋 Apresentação", "📊 Visão Geral", "🔍 Análise por Indicador",
          "🤖 Modelos Preditivos", "🚨 Risco de Evasão",
-         "👤 Visão 360° do Aluno", "🧑‍🎓 Predição Individual", "⚙️ Conta"],
+         "👤 Visão 360° do Aluno", "🧑‍🎓 Predição Individual"],
         label_visibility="collapsed",
         key="nav_radio",
     )
 
-    st.divider()
-    st.caption("Desenvolvido para o Datathon Passos Mágicos")
+    st.markdown("---")
+
+    st.markdown("""
+    <div style='text-align: center; color: rgba(255,255,255,0.45); font-size: 0.7rem; line-height: 1.6;'>
+        Desenvolvido para o<br>
+        <strong style='color: rgba(255,255,255,0.65);'>Datathon FIAP PosTech</strong><br>
+        Data Analytics — Fase 5
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    if st.button("🚪 Sair", key="logout_admin"):
+        for k in ['logged_in', 'role', 'username', 'aluno_key']:
+            st.session_state.pop(k, None)
+        st.rerun()
 
 
 # =============================================================================
@@ -2887,6 +2842,3 @@ elif pagina == "🧑‍🎓 Predição Individual":
             with st.expander("➕ Detalhes dos Sinais de Risco"):
                 for s in sinais_f:
                     st.markdown(f"- ⚠️ {s}")
-
-elif pagina == "⚙️ Conta":
-    _render_conta()

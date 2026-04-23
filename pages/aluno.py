@@ -9,7 +9,6 @@ import plotly.express as px
 import joblib
 import numpy as np
 import os
-from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # CSS dark theme
@@ -23,6 +22,10 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     color: #E8EAF0 !important;
     font-family: 'Montserrat', sans-serif !important;
 }
+[data-testid="stSidebar"] {
+    background-color: #0A1520 !important;
+}
+[data-testid="stSidebar"] * { color: #C8CDD8 !important; }
 
 .aluno-card {
     background: linear-gradient(135deg, #1A2B3C 0%, #0F2030 100%);
@@ -195,7 +198,7 @@ def _init_gamification(aluno_key, aluno):
 # ---------------------------------------------------------------------------
 # Main render function (called from app.py)
 # ---------------------------------------------------------------------------
-def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
+def render(aluno_key, aluno):
     st.markdown(_CSS, unsafe_allow_html=True)
 
     g = _init_gamification(aluno_key, aluno)
@@ -204,40 +207,20 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
     proxima = _PEDRA_NEXT.get(aluno['pedra'])
 
     # ── Header ──────────────────────────────────────────────────────────────
-    inicial = aluno['nome'][0].upper()
-    nome = aluno['nome']
-    pedra = aluno['pedra']
-    fase = aluno['fase']
-    anos = aluno['anos_programa']
     st.markdown(f"""
-    <div style="
-        background: linear-gradient(135deg, #132233 0%, #0D1B2A 100%);
-        border: 1px solid rgba(46,134,193,0.35);
-        border-radius: 14px;
-        padding: 24px 28px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    ">
-        <div style="
-            width: 64px; height: 64px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1B4F72, #2E86C1);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: 700; color: white;
-            flex-shrink: 0;
-        ">{inicial}</div>
-        <div style="flex:1;">
-            <h2 style="color:#F4A261; margin:0; font-size:1.5rem">Olá, {nome.split()[0]}! 👋</h2>
-            <p style="color:#8AAFC7; margin:4px 0 0 0; font-size:0.9rem">
-                {pedra_icon} {pedra} &nbsp;·&nbsp; Fase {fase}
-                &nbsp;·&nbsp; {anos} ano(s) no programa
-            </p>
+    <div style='display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;'>
+        <div style='font-size:3rem;'>{pedra_icon}</div>
+        <div>
+            <div style='font-size:1.5rem; font-weight:800; color:#E8EAF0;'>
+                Olá, {aluno['nome'].split()[0]}! 👋
+            </div>
+            <div style='font-size:0.85rem; color:#7A8FA6;'>
+                {aluno['pedra']} · Fase {aluno['fase']} · {aluno['anos_programa']} ano(s) no programa · RA {aluno['ra']}
+            </div>
         </div>
-        <div style="text-align:right;">
-            <div style="font-size:0.7rem; color:#7A8FA6; text-transform:uppercase; letter-spacing:1px;">XP Total</div>
-            <div style="font-size:1.8rem; font-weight:800; color:#F4B41A;">{g['xp']:,}</div>
+        <div style='margin-left:auto; text-align:right;'>
+            <div style='font-size:0.7rem; color:#7A8FA6; text-transform:uppercase; letter-spacing:1px;'>XP Total</div>
+            <div style='font-size:1.8rem; font-weight:800; color:#F4B41A;'>{g['xp']:,}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -253,8 +236,15 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Roteamento por seleção do sidebar ────────────────────────────────────
-    if pagina_aluno == "🏠 Meu Painel":
+    st.markdown("---")
+
+    # ── Tabs ─────────────────────────────────────────────────────────────────
+    tab_visao, tab_notas, tab_missoes, tab_ranking = st.tabs([
+        "📊 Meu Painel", "📚 Minhas Notas", "🎯 Missões & Badges", "🏆 Ranking"
+    ])
+
+    # ── TAB 1: Visão 360 ─────────────────────────────────────────────────────
+    with tab_visao:
         col_gauge, col_cards = st.columns([1, 1])
 
         with col_gauge:
@@ -383,7 +373,8 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
             else:
                 st.info("Modelo de evasão não disponível.")
 
-    elif pagina_aluno == "📝 Minhas Notas":
+    # ── TAB 2: Notas ─────────────────────────────────────────────────────────
+    with tab_notas:
         st.markdown("#### 📚 Desempenho Acadêmico")
 
         notas = [
@@ -449,7 +440,8 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
         )
         st.plotly_chart(fig_radar, use_container_width=True)
 
-    elif pagina_aluno == "🎮 Missões & Badges":
+    # ── TAB 3: Missões & Badges ───────────────────────────────────────────────
+    with tab_missoes:
         st.markdown("#### 🎯 Missões Ativas")
 
         missoes = [
@@ -528,7 +520,8 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
         </div>
         """, unsafe_allow_html=True)
 
-    elif pagina_aluno == "🏆 Ranking":
+    # ── TAB 4: Ranking ───────────────────────────────────────────────────────
+    with tab_ranking:
         st.markdown("#### 🏆 Mini Ranking do Programa")
 
         from data.mock_alunos import ALUNOS_MOCK
@@ -564,7 +557,3 @@ def render(aluno_key, aluno, pagina_aluno="🏠 Meu Painel"):
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-    elif pagina_aluno == "⚙️ Conta":
-        from pages.conta import render as _render_conta
-        _render_conta()
