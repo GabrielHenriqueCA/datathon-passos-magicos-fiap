@@ -16,6 +16,7 @@ _Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes 
 1. **Menu lateral filtrado por perfil**: admin vê 7 opções do dashboard; aluno vê 4 opções (`🏠 Meu Painel`, `📝 Minhas Notas`, `🎮 Missões & Badges`, `🏆 Ranking`) — roteamento por `if/elif` sem tabs
 2. **Header do aluno** — substituído por card dark (`#132233 → #0D1B2A`) com avatar circular (inicial do nome), cor #F4A261 no nome, borda `rgba(46,134,193,0.35)`
 3. **Botão Sair** presente em ambos os perfis no sidebar
+4. **Navegação automática de pages/ suprimida** — `[ui] hideSidebarNav = true` em `.streamlit/config.toml` + CSS `[data-testid="stSidebarNav"] { display:none }` em app.py e pages/aluno.py como fallback
 
 ---
 

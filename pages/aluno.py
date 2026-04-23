@@ -15,6 +15,10 @@ import os
 # ---------------------------------------------------------------------------
 _CSS = """
 <style>
+/* Suprime navegação automática de pages/ */
+[data-testid="stSidebarNav"] { display: none !important; }
+[data-testid="stSidebarNav"] + div hr { display: none !important; }
+
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
