@@ -655,6 +655,9 @@ st.set_page_config(
 # LOGIN — gate must come right after set_page_config
 # =============================================================================
 def _render_login():
+    from PIL import Image
+    import io as _io
+
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
@@ -664,22 +667,6 @@ def _render_login():
     }
     [data-testid="stSidebar"] { display: none !important; }
     [data-testid="stHeader"]  { background: transparent !important; }
-    .login-box {
-        background: linear-gradient(135deg, #1A2B3C 0%, #0F2030 100%);
-        border: 1px solid #2A3F55;
-        border-radius: 16px;
-        padding: 2.5rem 2rem;
-        max-width: 400px;
-        margin: 4rem auto 0;
-        text-align: center;
-    }
-    .login-title {
-        font-size: 1.5rem; font-weight: 800;
-        color: #F4B41A; margin-bottom: 0.3rem;
-    }
-    .login-sub {
-        font-size: 0.8rem; color: #7A8FA6; margin-bottom: 1.5rem;
-    }
     label { color: #C8CDD8 !important; }
     [data-testid="stTextInput"] > div > input {
         background: #0D1B2A !important;
@@ -695,54 +682,65 @@ def _render_login():
     </style>
     """, unsafe_allow_html=True)
 
+    # Build logo — strip white pixels for transparent background
     _logo_b64 = None
     for _lp in ["assets/logo_passos_magicos.png", "assets/logo.png"]:
         if Path(_lp).exists():
-            with open(_lp, "rb") as _f:
-                _logo_b64 = base64.b64encode(_f.read()).decode()
+            try:
+                _img = Image.open(_lp).convert("RGBA")
+                _pixels = _img.getdata()
+                _img.putdata([
+                    (r, g, b, 0) if (r > 200 and g > 200 and b > 200) else (r, g, b, a)
+                    for r, g, b, a in _pixels
+                ])
+                _buf = _io.BytesIO()
+                _img.save(_buf, format="PNG")
+                _logo_b64 = base64.b64encode(_buf.getvalue()).decode()
+            except Exception:
+                with open(_lp, "rb") as _f:
+                    _logo_b64 = base64.b64encode(_f.read()).decode()
             break
+
     _logo_tag = (
         f'<img src="data:image/png;base64,{_logo_b64}" '
-        'style="width:140px; background:transparent; border:none; '
-        'filter: drop-shadow(0 0 8px rgba(244,162,97,0.3)); mix-blend-mode:screen;">'
+        'style="width:140px; background:transparent; border:none; box-shadow:none; '
+        'filter: drop-shadow(0 4px 16px rgba(244,162,97,0.35));">'
     ) if _logo_b64 else ''
 
-    col_l, col_c, col_r = st.columns([1, 2, 1])
-    with col_c:
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
         st.markdown(f"""
-        <div style="text-align:center; margin-bottom:16px;">
+        <div style="text-align:center; margin-top:48px; margin-bottom:0px">
             {_logo_tag}
+            <h1 style="color:#F4A261; margin:16px 0 4px 0; font-size:2rem; font-weight:700">
+                Passos Mágicos
+            </h1>
+            <p style="color:#8AAFC7; margin:0 0 32px 0; font-size:0.95rem">
+                Plataforma de Análise Educacional
+            </p>
         </div>
-        <h1 style="text-align:center; color:#F4A261; margin:12px 0 4px 0">Passos Mágicos</h1>
-        <p style="text-align:center; color:#8AAFC7; margin:0 0 24px 0; font-size:0.9rem">
-            Plataforma de Análise Educacional
-        </p>
         """, unsafe_allow_html=True)
 
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-    st.markdown("<div class='login-sub'>Datathon Analytics — acesso restrito</div>", unsafe_allow_html=True)
+        usuario = st.text_input("Usuário", placeholder="Digite seu usuário", key="login_user")
+        senha   = st.text_input("Senha", type="password", placeholder="Digite sua senha", key="login_pass")
 
-    usuario = st.text_input("Usuário", key="login_user")
-    senha   = st.text_input("Senha",   key="login_pass", type="password")
+        if st.button("Entrar", use_container_width=True, type="primary"):
+            user_data = USERS.get(usuario)
+            if user_data and user_data['password'] == senha:
+                st.session_state['logged_in']  = True
+                st.session_state['role']       = user_data['role']
+                st.session_state['username']   = usuario
+                st.session_state['aluno_key']  = user_data['aluno_key']
+                st.session_state['login_time'] = datetime.now()
+                st.rerun()
+            else:
+                st.error("Usuário ou senha inválidos.")
 
-    if st.button("Entrar"):
-        user_data = USERS.get(usuario)
-        if user_data and user_data['password'] == senha:
-            st.session_state['logged_in']  = True
-            st.session_state['role']       = user_data['role']
-            st.session_state['username']   = usuario
-            st.session_state['aluno_key']  = user_data['aluno_key']
-            st.session_state['login_time'] = datetime.now()
-            st.rerun()
-        else:
-            st.error("Usuário ou senha inválidos.")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style='text-align:center; margin-top:1.5rem; font-size:0.72rem; color:#3A5A7A;'>
-        admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("""
+        <div style='text-align:center; margin-top:1.2rem; font-size:0.72rem; color:#3A5A7A;'>
+            admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
+        </div>
+        """, unsafe_allow_html=True)
 
 
 if not st.session_state.get('logged_in'):

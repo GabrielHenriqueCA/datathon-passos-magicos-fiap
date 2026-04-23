@@ -20,8 +20,9 @@ _Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes 
 5. **Página "⚙️ Conta"** — adicionada como última opção em ambos os menus (admin e aluno); implementada em `pages/conta.py`; botão "Encerrar Sessão" limpa todo o session_state; mostra usuário, tempo conectado, perfil e hora de login
 6. **`login_time` salvo no session_state** no momento do login bem-sucedido (`datetime.now()`)
 7. **Botão Sair removido do sidebar** — substituído pela página Conta
-8. **Logo na tela de login** — base64-encoded inline no HTML (sem `st.image()`), `mix-blend-mode:screen` + `filter:drop-shadow` para fundo transparente sobre `#0D1B2A`
+8. **Tela de login refeita** — sem `.login-box` container; tudo em `col2` de `st.columns([1,1.5,1])`; PIL remove pixels brancos da logo antes de base64-encodar; ordem: logo → título → subtítulo → inputs → botão; sem divs extras entre elementos
 9. **Espaço extra no topo do sidebar removido** — CSS `padding-top:0` em `[data-testid="stSidebar"] > div:first-child` adicionado em app.py e pages/aluno.py
+10. **`pages/conta.py` refatorado** — função única `_render_pagina_conta(nome, usuario, perfil_label, inicial, login_time)` usada por admin e aluno; layout e cores idênticos nos dois perfis; `render()` resolve os dados do session_state e chama a função compartilhada
 
 ---
 
