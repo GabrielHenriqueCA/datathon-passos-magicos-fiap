@@ -4,14 +4,14 @@ Treinamento dos modelos preditivos — Datathon Passos Magicos
 Modelos treinados:
   1. risco_defasagem.joblib    -> Risco de Defasagem (Random Forest)
   2. enquadramento_pedra.joblib -> Classificacao da Pedra (RF / GB multiclasse)
-  3. risco_evasao.joblib        -> Risco de Evasao (Random Forest)
+  3. ponto_virada.joblib        -> Ponto de Virada (Gradient Boosting)
+  4. churn.joblib               -> Risco de Evasao (Random Forest)
 
 Uso:
     python train_model.py
 """
 
 import os
-import sys
 import warnings
 
 import numpy as np
@@ -19,7 +19,6 @@ import pandas as pd
 import joblib
 
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
     f1_score, roc_auc_score, classification_report, confusion_matrix,
@@ -199,6 +198,20 @@ def treinar_risco_defasagem():
 
     scaler = StandardScaler().fit(X_tr)
 
+    import json
+    metricas_def = {
+        'melhor_nome':  'Random Forest',
+        'acc_treino':   acc_tr,
+        'acc_teste':    acc_te,
+        'f1_score':     f1_te,
+        'recall':       rec_te,
+        'precision':    prec_te,
+        'roc_auc':      auc_te,
+        'threshold':    threshold,
+    }
+    with open('models/risco_defasagem_metrics.json', 'w', encoding='utf-8') as fh:
+        json.dump(metricas_def, fh, indent=2)
+
     artefato = {
         'modelo':              rf,
         'scaler':              scaler,
@@ -220,6 +233,7 @@ def treinar_risco_defasagem():
     }
     joblib.dump(artefato, 'models/risco_defasagem.joblib')
     print("\n  Salvo em: models/risco_defasagem.joblib")
+    print("  Métricas em: models/risco_defasagem_metrics.json")
     return artefato
 
 
@@ -357,6 +371,17 @@ def treinar_enquadramento_pedra():
     # Confusion matrix
     cm = confusion_matrix(y_te, preds_te)
 
+    import json
+    metricas_pedra = {
+        'melhor_nome':  melhor_nome,
+        'acc_treino':   acc_tr_f,
+        'accuracy':     acc_te_f,
+        'f1_weighted':  f1_te_f,
+        'roc_auc':      auc,
+    }
+    with open('models/enquadramento_pedra_metrics.json', 'w', encoding='utf-8') as fh:
+        json.dump(metricas_pedra, fh, indent=2)
+
     artefato = {
         'modelo':              melhor_modelo,
         'label_encoder':       le,
@@ -375,6 +400,7 @@ def treinar_enquadramento_pedra():
     }
     joblib.dump(artefato, 'models/enquadramento_pedra.joblib')
     print("  Salvo em: models/enquadramento_pedra.joblib")
+    print("  Métricas em: models/enquadramento_pedra_metrics.json")
     return artefato
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -669,6 +695,10 @@ def treinar_churn():
         'n_total':             int(len(df_m)),
     }
 
+    import json
+    with open('models/churn_metrics.json', 'w', encoding='utf-8') as fh:
+        json.dump(metricas, fh, indent=2)
+
     artefato = {
         'modelo':             rf,
         'features':           features,
@@ -677,6 +707,7 @@ def treinar_churn():
     }
     joblib.dump(artefato, 'models/churn.joblib')
     print("  Salvo em: models/churn.joblib")
+    print("  Métricas em: models/churn_metrics.json")
     return artefato
 
 

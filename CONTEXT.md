@@ -1,5 +1,50 @@
 # CONTEXT — Datathon Passos Mágicos
-_Última atualização: 2026-04-22 — Sessão 12 (Limpeza do projeto — arquivos temporários removidos)_
+_Última atualização: 2026-04-23 — Sessão 13 (Auditoria cruzada completa)_
+
+## Auditoria cruzada — Sessão 13 (resultado)
+
+| Arquivo | Erros Críticos | Erros Moderados | Erros Baixos | Status Final |
+|---|---|---|---|---|
+| train_model.py | 0 | 3 corrigidos | 0 | ✅ OK |
+| app.py | 0 | 5 corrigidos | 2 corrigidos | ✅ OK |
+| notebook.ipynb | 0 | 0 | 0 | ✅ OK |
+| *_metrics.json | — | 3 arquivos ausentes → corrigido | — | ✅ OK |
+| README.md | 0 | 2 corrigidos | 0 | ✅ OK |
+| CONTEXT.md | 0 | 0 | 0 | ✅ OK |
+
+### Correções feitas (Sessão 13)
+
+**train_model.py:**
+1. Docstring linha 7: `risco_evasao.joblib` → `churn.joblib` + adicionado `ponto_virada.joblib` (4 modelos)
+2. Removido `import sys` (não usado)
+3. Removido `LogisticRegression` dos imports (não usado)
+4. Adicionado `json.dump` para `risco_defasagem_metrics.json` em `treinar_risco_defasagem()`
+5. Adicionado `json.dump` para `enquadramento_pedra_metrics.json` em `treinar_enquadramento_pedra()`
+6. Adicionado `json.dump` para `churn_metrics.json` em `treinar_churn()`
+   → Agora todos os 4 modelos geram `_metrics.json` ao executar `train_model.py`
+
+**app.py:**
+7. Removido bloco de imports sklearn não usados em runtime (train_test_split, cross_val_score, StratifiedKFold, RF, GB, LR, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix, classification_report)
+8. Linha que expunha "Gradient Boosting" no texto de descrição do modelo → texto genérico
+9. Linha que expunha "Gap treino/teste" e "overfitting" → linguagem gerencial
+10. Removidos dois blocos mortos (`if False:` e `elif ... and False:` — 382 linhas)
+11. `MEDIA_INDICADORES` na Visão 360°: corrigido de default 5.0 → calculado dinamicamente de IAA/IEG/IPS/IDA/IPV/IAN
+12. `dados_form` na Predição Individual: adicionado `GENERO_NUM` (corrige bug de gênero no modelo defasagem), `PV_NUM`, e `MEDIA_INDICADORES` calculado sobre 6 indicadores (consistente com churn model)
+13. `dados_360`: adicionado `GENERO_NUM` calculado como `1 - GENERO_FEMININO`
+14. `calcular_alerta_evasao` S5: condição `== 0` → `<= 0` (consistente com CONTEXT.md e documentação)
+
+**README.md:**
+15. "trains the 3 models" → "trains all 4 models"
+16. "Comparison of 5 algorithms" → "Algorithm comparison (RF vs Gradient Boosting) per model"
+
+### Estado dos _metrics.json após Sessão 13
+- `risco_defasagem_metrics.json` — gerado por `train_model.py` (novo)
+- `enquadramento_pedra_metrics.json` — gerado por `train_model.py` (novo)
+- `ponto_virada_metrics.json` — gerado por `train_model.py` (existia)
+- `churn_metrics.json` — gerado por `train_model.py` (novo)
+→ Todos os 4 gerados ao rodar `python train_model.py` (antes era só 1)
+
+---
 
 ## Estrutura do projeto (estado limpo após Sessão 12)
 
@@ -24,13 +69,13 @@ Datathon/
 │   └── project_banner.png                    ← Asset de documentação
 ├── models/
 │   ├── risco_defasagem.joblib       ← Random Forest (acc=69.8%, F1=82.2%, AUC=0.66)
-│   ├── risco_defasagem_metrics.json ← ⚠️ AUSENTE — gerado pelo notebook (executar)
+│   ├── risco_defasagem_metrics.json ← gerado por train_model.py
 │   ├── enquadramento_pedra.joblib   ← Random Forest (acc=79.1%, AUC=0.929) — sem INDE/IAN
-│   ├── enquadramento_pedra_metrics.json ← ⚠️ AUSENTE — gerado pelo notebook (executar)
+│   ├── enquadramento_pedra_metrics.json ← gerado por train_model.py
 │   ├── ponto_virada.joblib          ← Gradient Boosting (acc=90.1%, AUC=0.861) — sem IPV/INDE
-│   ├── ponto_virada_metrics.json    ← ✅ presente
+│   ├── ponto_virada_metrics.json    ← gerado por train_model.py
 │   ├── churn.joblib                 ← Random Forest (acc=80.2%, AUC=87.8%) — evasão real
-│   └── churn_metrics.json           ← ⚠️ AUSENTE — gerado pelo notebook (executar)
+│   └── churn_metrics.json           ← gerado por train_model.py
 └── notebooks/
     └── Analise_Completa_Passos_Magicos.ipynb  ← 60 células, 13 seções (sem outputs — executar)
 
@@ -48,7 +93,7 @@ Datathon/
 |------|--------|------|
 | `tratamento_pede.py` | ❌ Não existe | Nunca foi criado — limpeza/tratamento está no notebook |
 | `BASE_PEDE_TRATADA.xlsx` | ❌ Não existe | Dataset tratado não é gerado separado |
-| `models/*_metrics.json` (3 de 4) | ⚠️ Ausentes | Executar notebook → Kernel → Restart & Run All |
+| `models/*_metrics.json` (4 de 4) | ✅ Gerados por train_model.py | — |
 | Outputs do notebook | ⚠️ Ausentes | Executar notebook e salvar com outputs |
 
 ## Arquitetura final (Sessão 5)

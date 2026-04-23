@@ -18,7 +18,9 @@
       "Bash(del *)",
       "Bash(rm -f __pycache__/app.cpython-314.pyc __pycache__/train_model.cpython-314.pyc)",
       "Bash(rmdir __pycache__)",
-      "Bash(rm -f generate_notebook.py nb_audit.txt nb_eda_cells.txt nb_eda_full.json)"
+      "Bash(rm -f generate_notebook.py nb_audit.txt nb_eda_cells.txt nb_eda_full.json)",
+      "PowerShell(Get-Command *)",
+      "PowerShell($env:Path -split ';' | Where-Object { $_ -match 'python' -or $_ -match 'conda' -or $_ -match 'streamlit' })"
     ]
   }
 }

@@ -17,14 +17,7 @@ import os
 import warnings
 import joblib
 
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, confusion_matrix, classification_report
-)
 
 warnings.filterwarnings('ignore')
 
@@ -633,7 +626,7 @@ def calcular_alerta_evasao(row):
         sinais += 1; descricoes.append("Desempenho acadêmico baixo (IDA < 5.5)")
     if row.get('EVOLUCAO_PEDRA', 0) < 0:
         sinais += 1; descricoes.append("Regrediu de nível de classificação")
-    if row.get('ANOS_PM', 0) > 4 and row.get('EVOLUCAO_PEDRA', 0) == 0:
+    if row.get('ANOS_PM', 0) > 4 and row.get('EVOLUCAO_PEDRA', 0) <= 0:
         sinais += 1; descricoes.append("Estagnado há mais de 4 anos")
     if sinais >= 3:
         return 'Alto', sinais, descricoes
@@ -1874,597 +1867,6 @@ elif pagina == "🤖 Modelos Preditivos":
 
 
 # =============================================================================
-# TAB: ENQUADRAMENTO DE PEDRA (dead code — content moved to aba_pedra)
-# =============================================================================
-if False:
-    st.markdown("""
-    <div class="section-header">
-        <h2>Enquadramento de Pedra — Classificação Educacional</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    > **Objetivo:** Classificar automaticamente o nível educacional de cada aluno
-    > (Quartzo → Ágata → Ametista → Topázio) com base nos seus indicadores.
-    > Modelo **Gradient Boosting** treinado offline com `train_model.py` e salvo em `models/enquadramento_pedra.joblib`.
-    """)
-    
-    # ── Preparar dados de pedra ──
-    _PEDRA_ORD = {'Quartzo': 1, 'Agata': 2, 'Ágata': 2, 'Ametista': 3, 'Topazio': 4, 'Topázio': 4}
-    _PEDRA_CORES = {
-        'Quartzo': '#78909C', 'Agata': '#42A5F5', 'Ágata': '#42A5F5',
-        'Ametista': '#AB47BC', 'Topazio': '#FFD740', 'Topázio': '#FFD740',
-    }
-    df_pedra_vis = df_xlsx[['NOME', 'PEDRA_2022', 'FASE', 'INDE',
-                             'IAA', 'IEG', 'IPS', 'IDA', 'IPV', 'IAN', 'ANOS_PM']].copy()
-    df_pedra_vis = df_pedra_vis.dropna(subset=['PEDRA_2022'])
-    pedra_counts  = df_pedra_vis['PEDRA_2022'].value_counts()
-    total_pedra   = len(df_pedra_vis)
-
-    render_kpi_row([
-        {'label': 'Alunos Classificados', 'value': f"{total_pedra}",                    'color': '#2D325E'},
-        {'label': '🪨 Quartzo',   'value': f"{pedra_counts.get('Quartzo', 0)} ({pedra_counts.get('Quartzo', 0)/total_pedra*100:.0f}%)",   'color': '#78909C'},
-        {'label': '💎 Ágata',     'value': f"{pedra_counts.get('Agata', pedra_counts.get('Ágata', 0))} ({pedra_counts.get('Agata', pedra_counts.get('Ágata', 0))/total_pedra*100:.0f}%)", 'color': '#42A5F5'},
-        {'label': '✨ Ametista',  'value': f"{pedra_counts.get('Ametista', 0)} ({pedra_counts.get('Ametista', 0)/total_pedra*100:.0f}%)", 'color': '#AB47BC'},
-    ])
-
-    sub_vis_pedra, sub_modelo_pedra, sub_pred_pedra = st.tabs([
-        "📊 Distribuição por Pedra",
-        "🤖 Modelo Preditivo",
-        "🔮 Predição Individual",
-    ])
-
-    with sub_vis_pedra:
-        col1, col2 = st.columns(2)
-        with col1:
-            fig = px.pie(
-                df_pedra_vis, names='PEDRA_2022',
-                color='PEDRA_2022', color_discrete_map=_PEDRA_CORES,
-                title='💎 Distribuição por Classificação de Pedra',
-                template='plotly_white', hole=0.4,
-                category_orders={'PEDRA_2022': ['Quartzo', 'Agata', 'Ágata', 'Ametista', 'Topazio', 'Topázio']},
-            )
-            fig.update_traces(textposition='inside', textinfo='percent+label')
-            st.plotly_chart(fig, use_container_width=True)
-        with col2:
-            df_pedra_vis['PEDRA_ORD'] = df_pedra_vis['PEDRA_2022'].map(_PEDRA_ORD)
-            medias_ind = df_pedra_vis.groupby('PEDRA_2022')[['INDE', 'IAA', 'IEG', 'IPS', 'IDA']].mean().reset_index()
-            medias_melt = medias_ind.melt(id_vars='PEDRA_2022', var_name='Indicador', value_name='Média')
-            fig = px.bar(
-                medias_melt, x='PEDRA_2022', y='Média', color='Indicador',
-                barmode='group', title='📊 Média dos Indicadores por Pedra',
-                template='plotly_white',
-                category_orders={'PEDRA_2022': ['Quartzo', 'Agata', 'Ágata', 'Ametista', 'Topazio', 'Topázio']},
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        fig = px.box(
-            df_pedra_vis.dropna(subset=['INDE']), x='PEDRA_2022', y='INDE',
-            color='PEDRA_2022', color_discrete_map=_PEDRA_CORES,
-            title='📦 Distribuição do INDE por Classificação',
-            template='plotly_white',
-            category_orders={'PEDRA_2022': ['Quartzo', 'Agata', 'Ágata', 'Ametista', 'Topazio', 'Topázio']},
-        )
-        fig.update_layout(showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-        fig = px.scatter(
-            df_pedra_vis.dropna(subset=['INDE', 'IDA']),
-            x='INDE', y='IDA', color='PEDRA_2022', color_discrete_map=_PEDRA_CORES,
-            title='🔄 INDE vs IDA por Pedra', template='plotly_white', opacity=0.6,
-            labels={'INDE': 'INDE (2022)', 'IDA': 'Desempenho Acadêmico (IDA)'},
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    with sub_modelo_pedra:
-        st.markdown("""
-        <div class="section-header">
-            <h3>Modelo de Classificação — Enquadramento de Pedra</h3>
-        </div>
-        """, unsafe_allow_html=True)
-
-        modelo_pedra = carregar_modelo_pedra()
-
-        if modelo_pedra is not None:
-            res_p = modelo_pedra.resultados
-            acc_tr_p = res_p.get('acc_treino', 0)
-            acc_te_p = res_p.get('accuracy', 0)
-            f1_p     = res_p.get('f1_weighted', 0)
-            auc_p    = res_p.get('roc_auc', 0)
-            gap_p    = acc_tr_p - acc_te_p
-
-            render_kpi_row([
-                {'label': 'Algoritmo',       'value': modelo_pedra.melhor_nome,         'color': '#2D325E'},
-                {'label': 'Acc Treino',      'value': f"{acc_tr_p:.1%}",                'color': '#EE8133'},
-                {'label': 'Acc Teste',       'value': f"{acc_te_p:.1%}",                'color': '#4CAF50'},
-                {'label': 'F1 Ponderado',    'value': f"{f1_p:.1%}",                    'color': '#2196F3'},
-            ])
-
-            if gap_p > 0.1:
-                st.warning(f"⚠️ Gap treino/teste = {gap_p:.1%} — sinal de overfitting. Avalie com cautela.")
-
-            col_fi, col_classes = st.columns(2)
-            with col_fi:
-                if modelo_pedra.feature_importance is not None:
-                    fi_df = modelo_pedra.feature_importance.copy()
-                    fig = px.bar(
-                        fi_df, x='importance', y='feature', orientation='h',
-                        color='importance', color_continuous_scale='Purples',
-                        title='🎯 Importância das Features',
-                        template='plotly_white',
-                    )
-                    fig.update_layout(coloraxis_showscale=False,
-                                      yaxis={'categoryorder': 'total ascending'})
-                    st.plotly_chart(fig, use_container_width=True)
-
-            with col_classes:
-                classes_dist = df_pedra_vis['PEDRA_2022'].value_counts().reset_index()
-                classes_dist.columns = ['Classe', 'Alunos']
-                fig = px.bar(
-                    classes_dist, x='Classe', y='Alunos',
-                    color='Classe', color_discrete_map=_PEDRA_CORES,
-                    title='📊 Distribuição das Classes (dados reais)',
-                    template='plotly_white', text_auto=True,
-                )
-                fig.update_layout(showlegend=False)
-                st.plotly_chart(fig, use_container_width=True)
-
-            st.markdown(f"""
-            <div class="insight-box">
-                <p>💡 <strong>Insight:</strong> O modelo <strong>{modelo_pedra.melhor_nome}</strong>
-                classifica o enquadramento de Pedra com acurácia de teste de
-                <strong>{acc_te_p:.1%}</strong> e F1 ponderado de <strong>{f1_p:.1%}</strong>.
-                As features mais importantes são os indicadores educacionais (INDE, IAA, IDA).
-                Execute <code>python train_model.py</code> para re-treinar.</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ Modelo não encontrado. Execute `python train_model.py` primeiro.")
-
-    with sub_pred_pedra:
-        st.markdown("### 🔮 Predição de Enquadramento para Aluno Individual")
-        st.markdown("Insira os indicadores do aluno para prever seu enquadramento de Pedra.")
-
-        col_p1, col_p2 = st.columns(2)
-        with col_p1:
-            p_fase     = st.selectbox("Fase", list(range(0, 8)), index=2, key="p_fase")
-            p_anos_pm  = st.number_input("Anos na Passos Mágicos", 0, 15, 2, key="p_anos")
-            p_inde     = st.slider("INDE", 0.0, 10.0, 6.5, 0.1, key="p_inde")
-            p_iaa      = st.slider("IAA — Autoavaliação", 0.0, 10.0, 7.0, 0.1, key="p_iaa")
-            p_ieg      = st.slider("IEG — Engajamento", 0.0, 10.0, 6.5, 0.1, key="p_ieg")
-            p_ips      = st.slider("IPS — Psicossocial", 0.0, 10.0, 6.0, 0.1, key="p_ips")
-        with col_p2:
-            p_ida      = st.slider("IDA — Desempenho Acadêmico", 0.0, 10.0, 6.0, 0.1, key="p_ida")
-            p_ipv      = st.slider("IPV — Ponto de Virada", 0.0, 10.0, 5.0, 0.1, key="p_ipv")
-            p_ian      = st.slider("IAN — Adequação de Nível", 0.0, 10.0, 6.0, 0.1, key="p_ian")
-            p_nota_mat = st.slider("Nota Matemática", 0.0, 10.0, 6.0, 0.1, key="p_mat")
-            p_nota_por = st.slider("Nota Português", 0.0, 10.0, 6.0, 0.1, key="p_port")
-
-        if st.button("💎 Prever Enquadramento", use_container_width=True, type="primary", key="btn_pedra"):
-            modelo_pedra_pred = carregar_modelo_pedra()
-            if modelo_pedra_pred is not None:
-                media_notas = (p_nota_mat + p_nota_por) / 2
-                media_inds  = (p_iaa + p_ieg + p_ips + p_ida + p_ipv + p_ian) / 6
-                dados_pred  = {
-                    'FASE': p_fase, 'ANOS_PM': p_anos_pm, 'INDE': p_inde,
-                    'IDA': p_ida, 'IEG': p_ieg, 'IAA': p_iaa, 'IPS': p_ips,
-                    'IPV': p_ipv, 'IAN': p_ian,
-                    'NOTA_MAT': p_nota_mat, 'NOTA_PORT': p_nota_por,
-                    'MEDIA_NOTAS': media_notas, 'MEDIA_INDICADORES': media_inds,
-                }
-                res_pred = modelo_pedra_pred.predizer_pedra(dados_pred)
-                pedra_pred = res_pred['pedra']
-                cor_pred   = _PEDRA_CORES.get(pedra_pred, '#2D325E')
-                st.markdown(f"""
-                <div style='text-align:center; background:{cor_pred}22; border-left:5px solid {cor_pred};
-                            border-radius:10px; padding:1rem; margin:1rem 0;'>
-                    <div style='font-size:1.8rem; font-weight:800; color:{cor_pred};'>
-                        💎 {pedra_pred.upper()}
-                    </div>
-                    <div style='font-size:0.85rem; color:#555; margin-top:0.3rem;'>
-                        Confiança: {res_pred['confianca']:.1%}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                prob_df = pd.DataFrame([
-                    {'Classe': k, 'Probabilidade': v}
-                    for k, v in res_pred['probabilidades'].items()
-                ]).sort_values('Probabilidade', ascending=False)
-                fig = px.bar(
-                    prob_df, x='Classe', y='Probabilidade',
-                    color='Classe', color_discrete_map=_PEDRA_CORES,
-                    title='Probabilidade por Classe', template='plotly_white',
-                    text_auto='.1%',
-                )
-                fig.update_layout(showlegend=False, yaxis_tickformat='.0%')
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.error("⚠️ Modelo não carregado. Execute `python train_model.py` primeiro.")
-
-
-# =============================================================================
-# TAB: RISCO DE EVASÃO (dead code — content moved to aba_pv)
-# =============================================================================
-if False:
-    st.markdown("""
-    <div class="section-header">
-        <h2>Sistema de Alerta de Evasão — Baseado em Indicadores</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    > **Abordagem:** Sistema de alerta determinístico baseado em 5 sinais de risco validados pedagogicamente.
-    > Testamos modelos de Machine Learning com o target real (alunos ausentes em 2024), mas o AUC ficou em
-    > **0.51 — essencialmente aleatório** — porque a evasão é determinada por fatores externos ao dataset
-    > (família, financeiro, mudança de cidade). O sistema de regras abaixo é **mais honesto e igualmente acionável**.
-    """)
-
-    # ── Computar 5 sinais de alerta diretamente dos indicadores ─────────────
-    df_ev = df_xlsx[['NOME', 'FASE', 'IAA', 'IEG', 'IPS', 'IDA', 'IPV', 'IAN',
-                      'ANOS_PM', 'PEDRA_2020', 'PEDRA_2021', 'PEDRA_2022', 'GENERO']].copy()
-
-    df_ev['PEDRA_2020_N'] = df_ev['PEDRA_2020'].map(_PEDRA_ORD)
-    df_ev['PEDRA_2021_N'] = df_ev['PEDRA_2021'].map(_PEDRA_ORD)
-    df_ev['PEDRA_2022_N'] = df_ev['PEDRA_2022'].map(_PEDRA_ORD)
-    df_ev['EVOLUCAO_PEDRA'] = np.where(
-        df_ev['PEDRA_2021_N'].notna() & df_ev['PEDRA_2022_N'].notna(),
-        df_ev['PEDRA_2022_N'] - df_ev['PEDRA_2021_N'],
-        np.where(
-            df_ev['PEDRA_2020_N'].notna() & df_ev['PEDRA_2022_N'].notna(),
-            df_ev['PEDRA_2022_N'] - df_ev['PEDRA_2020_N'],
-            0.0,
-        )
-    )
-
-    # 5 sinais de alerta (regras determinísticas — sem ML)
-    df_ev['S1_IEG_BAIXO']     = (df_ev['IEG'] < 5.5).astype(int)
-    df_ev['S2_IPS_CRITICO']   = (df_ev['IPS'] < 5.0).astype(int)
-    df_ev['S3_QUEDA_PEDRA']   = (df_ev['EVOLUCAO_PEDRA'] < 0).astype(int)
-    df_ev['S4_IDA_BAIXO']     = (df_ev['IDA'] < 5.5).astype(int)
-    df_ev['S5_ESTAGNACAO']    = ((df_ev['ANOS_PM'] > 4) & (df_ev['EVOLUCAO_PEDRA'] <= 0)).astype(int)
-    df_ev['N_SINAIS']  = (df_ev[['S1_IEG_BAIXO','S2_IPS_CRITICO','S3_QUEDA_PEDRA',
-                                   'S4_IDA_BAIXO','S5_ESTAGNACAO']].sum(axis=1))
-    df_ev['NIVEL_ALERTA'] = df_ev['N_SINAIS'].map(
-        {0: '🟢 Nenhum', 1: '🟡 Observação', 2: '🟠 Atenção', 3: '🔴 Crítico', 4: '🔴 Crítico', 5: '🔴 Crítico'}
-    )
-    df_ev['EM_ALERTA'] = (df_ev['N_SINAIS'] >= 2).astype(int)
-
-    n_alerta = df_ev['EM_ALERTA'].sum()
-    n_ok     = (df_ev['EM_ALERTA'] == 0).sum()
-    total_ev = len(df_ev)
-
-    render_kpi_row([
-        {'label': 'Alunos Analisados',       'value': f"{total_ev}",                                'color': '#2D325E'},
-        {'label': '🔴 Em Alerta (≥2 sinais)', 'value': f"{n_alerta} ({n_alerta/total_ev*100:.0f}%)", 'color': '#D84C51'},
-        {'label': '🟢 Sem Alerta',            'value': f"{n_ok} ({n_ok/total_ev*100:.0f}%)",         'color': '#4CAF50'},
-        {'label': 'Média de Sinais (alerta)',  'value': f"{df_ev[df_ev['EM_ALERTA']==1]['N_SINAIS'].mean():.1f}", 'color': '#EE8133'},
-    ])
-
-    sub_vis_ev, sub_regras_ev, sub_rank_ev = st.tabs([
-        "📊 Visão Geral",
-        "📋 Como Funciona",
-        "🔍 Ranking de Alerta",
-    ])
-
-    with sub_vis_ev:
-        col1, col2 = st.columns(2)
-        with col1:
-            ev_counts = pd.DataFrame({
-                'Status': ['Em Alerta', 'Sem Alerta'],
-                'Alunos': [n_alerta, n_ok],
-            })
-            fig = px.pie(
-                ev_counts, values='Alunos', names='Status',
-                color='Status', color_discrete_map={'Em Alerta': '#D84C51', 'Sem Alerta': '#4CAF50'},
-                title='🚨 Distribuição de Alerta de Evasão', template='plotly_white', hole=0.4,
-            )
-            fig.update_traces(textposition='inside', textinfo='percent+label')
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col2:
-            sinais_df = pd.DataFrame({
-                'Sinal': ['IEG < 5.5\n(Engajamento)', 'IPS < 5.0\n(Psicossocial)',
-                          'Queda de\nPedra', 'IDA < 5.5\n(Desempenho)', 'Estagnação\n> 4 anos'],
-                'Alunos': [
-                    df_ev['S1_IEG_BAIXO'].sum(), df_ev['S2_IPS_CRITICO'].sum(),
-                    df_ev['S3_QUEDA_PEDRA'].sum(), df_ev['S4_IDA_BAIXO'].sum(),
-                    df_ev['S5_ESTAGNACAO'].sum(),
-                ],
-            })
-            fig = px.bar(
-                sinais_df, x='Sinal', y='Alunos',
-                color_discrete_sequence=['#D84C51'],
-                title='🔍 Alunos por Sinal de Alerta',
-                template='plotly_white', text_auto=True,
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        # Distribuição por número de sinais
-        dist_sinais = df_ev['N_SINAIS'].value_counts().sort_index().reset_index()
-        dist_sinais.columns = ['Sinais', 'Alunos']
-        dist_sinais['Cor'] = dist_sinais['Sinais'].map(
-            {0: '#4CAF50', 1: '#F4B41A', 2: '#FF9800', 3: '#D84C51', 4: '#B71C1C', 5: '#B71C1C'}
-        )
-        fig = px.bar(
-            dist_sinais, x='Sinais', y='Alunos',
-            color='Sinais', color_discrete_sequence=dist_sinais['Cor'].tolist(),
-            title='📊 Distribuição pelo Número de Sinais Ativos',
-            template='plotly_white', text_auto=True,
-        )
-        fig.update_layout(showlegend=False, xaxis_title='Nº de Sinais de Alerta')
-        fig.add_vline(x=1.5, line_dash='dash', line_color='#D84C51',
-                      annotation_text='Limiar de alerta (≥ 2)', annotation_position='top right')
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Comparativo de indicadores
-        indicadores_ev = ['IEG', 'IPS', 'IDA', 'IPV', 'IAA', 'IAN']
-        medias_ev = []
-        for ind in indicadores_ev:
-            medias_ev.append({'Indicador': ind, 'Grupo': 'Sem Alerta', 'Média': df_ev[df_ev['EM_ALERTA']==0][ind].mean()})
-            medias_ev.append({'Indicador': ind, 'Grupo': 'Em Alerta',  'Média': df_ev[df_ev['EM_ALERTA']==1][ind].mean()})
-        fig = px.bar(
-            pd.DataFrame(medias_ev), x='Indicador', y='Média', color='Grupo', barmode='group',
-            color_discrete_map={'Sem Alerta': '#4CAF50', 'Em Alerta': '#D84C51'},
-            title='📈 Média dos Indicadores: Em Alerta vs Sem Alerta',
-            template='plotly_white', text_auto='.2f',
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    with sub_regras_ev:
-        st.markdown("""
-        <div class="section-header">
-            <h3>📋 Metodologia do Sistema de Alerta</h3>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        ### Por que não usamos Machine Learning aqui?
-
-        Testamos modelos de ML (Random Forest, Gradient Boosting) com o **target real de evasão**
-        (alunos presentes em 2022 que não aparecem em 2024). O resultado foi AUC = **0.51** — equivalente
-        a um lançamento de moeda. Isso acontece porque a evasão é determinada por fatores
-        **fora do dataset**: mudança de cidade, questões financeiras, dinâmicas familiares.
-
-        A honestidade técnica é parte do rigor metodológico: um modelo ruim é pior que uma regra clara.
-
-        ---
-
-        ### Os 5 Sinais de Alerta
-        """)
-
-        sinais_info = [
-            ("🔴 Sinal 1 — Engajamento Baixo", "IEG < 5.5",
-             "O aluno demonstra baixo envolvimento nas atividades. Primeiro preditor de desengajamento."),
-            ("🔴 Sinal 2 — Aspecto Psicossocial Crítico", "IPS < 5.0",
-             "Indicador de vulnerabilidade emocional ou sociofamiliar elevada. Requer atenção imediata da equipe de psicologia."),
-            ("🔴 Sinal 3 — Queda de Pedra", "PEDRA atual < PEDRA anterior",
-             "O aluno regrediu de nível educacional entre os anos analisados."),
-            ("🔴 Sinal 4 — Desempenho Acadêmico Baixo", "IDA < 5.5",
-             "Notas e avaliações acadêmicas abaixo do mínimo esperado para a fase."),
-            ("🔴 Sinal 5 — Estagnação Prolongada", "Anos no programa > 4 SEM progressão de pedra",
-             "O aluno está há mais de 4 anos no programa sem evoluir de nível."),
-        ]
-
-        for titulo, regra, desc in sinais_info:
-            with st.expander(f"➕ {titulo} — `{regra}`"):
-                st.markdown(desc)
-
-        st.markdown("""
-        ---
-        ### Classificação do Nível de Alerta
-
-        | Sinais Ativos | Nível | Ação Sugerida |
-        |---|---|---|
-        | 0 | 🟢 Nenhum | Acompanhamento regular |
-        | 1 | 🟡 Observação | Verificar na próxima avaliação |
-        | ≥ 2 | 🟠 Atenção / 🔴 Crítico | **Intervenção ativa recomendada** |
-        """)
-
-        st.markdown(f"""
-        <div class="insight-box">
-            <p>💡 <strong>Insight:</strong> Dos <strong>{total_ev}</strong> alunos analisados,
-            <strong>{n_alerta} ({n_alerta/total_ev*100:.0f}%)</strong> apresentam 2 ou mais sinais
-            e devem receber atenção prioritária da equipe pedagógica e psicossocial da ONG.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with sub_rank_ev:
-        st.markdown("""
-        <div class="section-header">
-            <h3>🔍 Ranking de Alerta — Todos os Alunos</h3>
-        </div>
-        """, unsafe_allow_html=True)
-
-        render_kpi_row([
-            {'label': 'Total analisado', 'value': f"{total_ev}",       'color': '#2D325E'},
-            {'label': '🟢 Nenhum sinal', 'value': f"{(df_ev['N_SINAIS']==0).sum()}", 'color': '#4CAF50'},
-            {'label': '🟡 1 sinal',      'value': f"{(df_ev['N_SINAIS']==1).sum()}", 'color': '#F4B41A'},
-            {'label': '🔴 ≥2 sinais',    'value': f"{n_alerta}",       'color': '#D84C51'},
-        ])
-
-        st.markdown("---")
-        st.markdown("### 👤 Ficha Individual")
-        aluno_ev = st.selectbox(
-            "Selecione um aluno:",
-            [""] + list(df_ev.sort_values('N_SINAIS', ascending=False)['NOME']),
-            key="sel_ev_aluno",
-        )
-        if aluno_ev:
-            row_ev = df_ev[df_ev['NOME'] == aluno_ev].iloc[0]
-            n_sinais_aluno = int(row_ev['N_SINAIS'])
-            nivel_cor = {'🟢 Nenhum': '#4CAF50', '🟡 Observação': '#F4B41A',
-                         '🟠 Atenção': '#FF9800', '🔴 Crítico': '#D84C51'}.get(
-                             str(row_ev['NIVEL_ALERTA']), '#2D325E')
-
-            c_gauge, c_info = st.columns(2)
-            with c_gauge:
-                fig_g = go.Figure(go.Indicator(
-                    mode="gauge+number",
-                    value=n_sinais_aluno,
-                    title={'text': "Sinais de Alerta Ativos", 'font': {'size': 16}},
-                    gauge={
-                        'axis': {'range': [0, 5], 'tickwidth': 1},
-                        'bar': {'color': nivel_cor},
-                        'steps': [
-                            {'range': [0, 1],  'color': 'rgba(76,175,80,0.2)'},
-                            {'range': [1, 2],  'color': 'rgba(244,180,26,0.2)'},
-                            {'range': [2, 5],  'color': 'rgba(216,76,81,0.2)'},
-                        ],
-                        'threshold': {'line': {'color': '#D84C51', 'width': 3},
-                                      'thickness': 0.75, 'value': 2},
-                    }
-                ))
-                fig_g.update_layout(height=280, margin=dict(l=20, r=20, t=30, b=20))
-                st.plotly_chart(fig_g, use_container_width=True)
-            with c_info:
-                st.markdown(f"**Nome:** {row_ev['NOME']}")
-                st.markdown(f"**Nível de Alerta:** {row_ev['NIVEL_ALERTA']}")
-                st.markdown(f"**Sinais Ativos:** {n_sinais_aluno}/5")
-                st.markdown(f"**IEG:** {row_ev['IEG']:.2f} | **IPS:** {row_ev['IPS']:.2f} | **IDA:** {row_ev['IDA']:.2f}")
-                st.markdown(f"**INDE:** {df_xlsx.loc[df_xlsx['NOME']==aluno_ev,'INDE'].values[0]:.2f} | **Anos PM:** {int(row_ev['ANOS_PM'])}")
-                st.markdown(f"**Pedra 2022:** {row_ev.get('PEDRA_2022', '—')} | **Evolução:** {row_ev['EVOLUCAO_PEDRA']:+.0f}")
-                if n_sinais_aluno > 0:
-                    st.markdown("---")
-                    st.markdown("**Sinais ativos:**")
-                    if row_ev['S1_IEG_BAIXO']:  st.markdown("- 🔴 IEG < 5.5 — Engajamento baixo")
-                    if row_ev['S2_IPS_CRITICO']: st.markdown("- 🔴 IPS < 5.0 — Aspecto psicossocial crítico")
-                    if row_ev['S3_QUEDA_PEDRA']: st.markdown("- 🔴 Queda de pedra registrada")
-                    if row_ev['S4_IDA_BAIXO']:  st.markdown("- 🔴 IDA < 5.5 — Desempenho acadêmico baixo")
-                    if row_ev['S5_ESTAGNACAO']:  st.markdown("- 🔴 Estagnação > 4 anos sem progressão")
-                if n_sinais_aluno >= 2:
-                    st.error("⚠️ **Intervenção recomendada** — aluno com múltiplos sinais de alerta.")
-
-        st.markdown("---")
-        st.markdown("### 📋 Ranking Completo")
-        busca_ev = st.text_input("🔍 Filtrar por nome:", key="busca_ev")
-
-        show_ev = df_ev[['NOME', 'N_SINAIS', 'NIVEL_ALERTA', 'IEG', 'IPS', 'IDA', 'ANOS_PM',
-                          'S1_IEG_BAIXO', 'S2_IPS_CRITICO', 'S3_QUEDA_PEDRA', 'S4_IDA_BAIXO', 'S5_ESTAGNACAO']].copy()
-        show_ev.columns = ['Nome', 'Sinais', 'Nível', 'IEG', 'IPS', 'IDA', 'Anos PM',
-                            'S1:IEG', 'S2:IPS', 'S3:Pedra', 'S4:IDA', 'S5:Estag']
-        show_ev = show_ev.sort_values('Sinais', ascending=False)
-        if busca_ev:
-            show_ev = show_ev[show_ev['Nome'].str.contains(busca_ev.upper(), na=False)]
-
-        st.markdown(f"**{len(show_ev)}** alunos | Ordenados por número de sinais (maior → menor)")
-
-        def _color_alerta(val):
-            if '🔴' in str(val): return 'background-color:rgba(216,76,81,0.2);font-weight:bold'
-            elif '🟠' in str(val): return 'background-color:rgba(255,152,0,0.2);font-weight:bold'
-            elif '🟡' in str(val): return 'background-color:rgba(244,180,26,0.2)'
-            elif '🟢' in str(val): return 'background-color:rgba(76,175,80,0.1)'
-            return ''
-
-        st.dataframe(
-            show_ev.style.applymap(_color_alerta, subset=['Nível']).format({
-                'IEG': '{:.2f}', 'IPS': '{:.2f}', 'IDA': '{:.2f}',
-            }),
-            use_container_width=True, height=500,
-        )
-
-# =============================================================================
-# PÁGINA: ALERTA ACADÊMICO (integrado ao menu lateral)
-# =============================================================================
-elif pagina == "📋 Apresentação" and False:  # placeholder — content below
-    st.markdown("""
-    <div class="section-header">
-        <h2>Painel de Alerta: Alunos com Desempenho Crítico</h2>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    > **Objetivo:** Monitorar e identificar ativamente os alunos que apresentam notas baixas, 
-    > permitindo que a equipe pedagógica atue com antecedência.
-    """)
-    
-    col_thresh, col_vazio = st.columns([1, 2])
-    with col_thresh:
-        limite_nota = st.slider("Definir Limite de 'Nota Ruim' (Menor que):", min_value=3.0, max_value=7.0, value=5.0, step=0.5)
-
-    df_atual = df_xlsx.copy()
-    
-    # Garantir formato numérico
-    for col in ['NOTA_MAT', 'NOTA_PORT', 'NOTA_ING']:
-        df_atual[col] = pd.to_numeric(df_atual[col], errors='coerce')
-        
-    mask_ruim = (df_atual['NOTA_MAT'] < limite_nota) | (df_atual['NOTA_PORT'] < limite_nota) | (df_atual['NOTA_ING'] < limite_nota)
-    df_criticos = df_atual[mask_ruim].copy()
-    
-    # Contabilizar quantas notas ruins
-    df_criticos['Qtd_Notas_Ruins'] = ((df_criticos['NOTA_MAT'] < limite_nota).astype(int) + 
-                                       (df_criticos['NOTA_PORT'] < limite_nota).astype(int) + 
-                                       (df_criticos['NOTA_ING'] < limite_nota).astype(int))
-    
-    # KPIs Rápidos
-    total_alunos = len(df_atual)
-    alerta_total = len(df_criticos)
-    perc_alerta = (alerta_total / total_alunos * 100) if total_alunos > 0 else 0
-    alerta_severo = len(df_criticos[df_criticos['Qtd_Notas_Ruins'] >= 2])
-    
-    render_kpi_row([
-        {'label': f'Total de Alunos ({df_atual["ANO_INGRESSO"].max() if "ANO_INGRESSO" in df_atual else 2024})', 'value': f"{total_alunos}", 'color': '#2D325E'},
-        {'label': f'Em Alerta (Nota < {limite_nota})', 'value': f"{alerta_total} ({perc_alerta:.1f}%)", 'color': '#EE8133'},
-        {'label': 'Múltiplas Matérias Ruins', 'value': f"{alerta_severo}", 'color': '#D84C51'},
-    ])
-    
-    if alerta_total > 0:
-        c1, c2 = st.columns([2, 1])
-        with c1:
-            st.markdown("### 📋 Lista de Alunos em Alerta")
-            busca_alerta = st.text_input("🔍 Filtrar por nome (Alerta):", placeholder="Digite o nome do aluno...")
-            
-            show_cols = ['NOME', 'FASE', 'Qtd_Notas_Ruins', 'NOTA_MAT', 'NOTA_PORT', 'NOTA_ING', 'INDE']
-            df_show_alerta = df_criticos[show_cols].sort_values(['Qtd_Notas_Ruins', 'INDE'], ascending=[False, True])
-            
-            if busca_alerta:
-                df_show_alerta = df_show_alerta[df_show_alerta['NOME'].str.contains(busca_alerta.upper(), na=False)]
-                
-            def style_bad_grades(val):
-                try:
-                    if float(val) < limite_nota:
-                        return 'color: #D84C51; font-weight: bold;'
-                except:
-                    pass
-                return ''
-                
-            st.dataframe(
-                df_show_alerta.style.applymap(style_bad_grades, subset=['NOTA_MAT', 'NOTA_PORT', 'NOTA_ING']).format({
-                    'NOTA_MAT': '{:.1f}', 'NOTA_PORT': '{:.1f}', 'NOTA_ING': '{:.1f}', 'INDE': '{:.2f}'
-                }),
-                use_container_width=True, height=400
-            )
-            
-        with c2:
-            st.markdown("### 📉 Ofendentes")
-            
-            # Contar ofendentes
-            mat_ruim = (df_criticos['NOTA_MAT'] < limite_nota).sum()
-            port_ruim = (df_criticos['NOTA_PORT'] < limite_nota).sum()
-            ing_ruim = (df_criticos['NOTA_ING'] < limite_nota).sum()
-            
-            df_ofensores = pd.DataFrame({
-                'Matéria': ['Matemática', 'Português', 'Inglês'],
-                'Notas Baixas': [mat_ruim, port_ruim, ing_ruim]
-            }).sort_values('Notas Baixas', ascending=True)
-            
-            fig = px.bar(
-                df_ofensores, x='Notas Baixas', y='Matéria', orientation='h',
-                color='Matéria', color_discrete_map={'Matemática': '#2D325E', 'Português': '#EE8133', 'Inglês': '#4CAF50'},
-                title=f'Volume de Notas < {limite_nota}',
-                template='plotly_white', text_auto=True
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown("""
-            <div class="insight-box">
-                <p>💡 <strong>Escalonamento de Risco:</strong> Alunos com notas ruins em mais de uma disciplina (Múltiplas Matérias Ruins) 
-                têm correlação altíssima com futura evasão. A intervenção deve ser priorizada.</p>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.success(f"Excelente! Nenhum aluno com nota abaixo de {limite_nota}.")
-
-# =============================================================================
 # PÁGINA: APRESENTAÇÃO (Resultados & Insights)
 # =============================================================================
 elif pagina == "📋 Apresentação":
@@ -2975,12 +2377,15 @@ elif pagina == "👤 Visão 360° do Aluno":
         ev_pedra_360 = p2022 - ref_360 if ref_360 > 0 else 0
 
         med_notas_360 = _safe(row.get('MEDIA_NOTAS'), (_safe(row.get('NOTA_MAT')) + _safe(row.get('NOTA_PORT')) + _safe(row.get('NOTA_ING'))) / 3)
-        med_ind_360   = _safe(row.get('MEDIA_INDICADORES'), 5.0)
+        _iaa_360 = _safe(row.get('IAA')); _ieg_360 = _safe(row.get('IEG'))
+        _ips_360 = _safe(row.get('IPS')); _ida_360 = _safe(row.get('IDA'))
+        _ipv_360 = _safe(row.get('IPV')); _ian_360 = _safe(row.get('IAN'))
+        med_ind_360 = (_iaa_360 + _ieg_360 + _ips_360 + _ida_360 + _ipv_360 + _ian_360) / 6
 
         dados_360 = {
-            'IAA': _safe(row.get('IAA')), 'IEG': _safe(row.get('IEG')),
-            'IPS': _safe(row.get('IPS')), 'IDA': _safe(row.get('IDA')),
-            'IPV': _safe(row.get('IPV')), 'IAN': _safe(row.get('IAN')),
+            'IAA': _iaa_360, 'IEG': _ieg_360,
+            'IPS': _ips_360, 'IDA': _ida_360,
+            'IPV': _ipv_360, 'IAN': _ian_360,
             'IPP': _safe(row.get('IPP')),
             'FASE': _safe(row.get('FASE'), 1.0),
             'ANOS_PM': _safe(row.get('ANOS_PM')),
@@ -2991,6 +2396,7 @@ elif pagina == "👤 Visão 360° do Aluno":
             'MEDIA_NOTAS': med_notas_360,
             'MEDIA_INDICADORES': med_ind_360,
             'GENERO_FEMININO': float(genero_fem_360),
+            'GENERO_NUM': 1.0 - float(genero_fem_360),
             'INSTITUICAO_COD': 0.0,
             'EVOLUCAO_PEDRA': float(ev_pedra_360),
         }
@@ -3170,9 +2576,10 @@ elif pagina == "🧑‍🎓 Predição Individual":
 
     if submitted_f:
         f_genero_fem  = 1 if f_genero == 'Menina' else 0
+        f_genero_num  = 0 if f_genero == 'Menina' else 1
         f_pedra_num   = _PEDRA_ORD.get(f_pedra, 0)
         f_media_notas = (f_mat + f_port + f_ing) / 3
-        f_media_ind   = (f_iaa + f_ieg + f_ips + f_ida + f_ipv + f_ian + f_ipp) / 7
+        f_media_ind   = (f_iaa + f_ieg + f_ips + f_ida + f_ipv + f_ian) / 6
 
         dados_form = {
             'IAA': f_iaa, 'IEG': f_ieg, 'IPS': f_ips, 'IDA': f_ida,
@@ -3181,7 +2588,10 @@ elif pagina == "🧑‍🎓 Predição Individual":
             'PEDRA_NUM': float(f_pedra_num),
             'NOTA_MAT': f_mat, 'NOTA_PORT': f_port, 'NOTA_ING': f_ing,
             'MEDIA_NOTAS': f_media_notas, 'MEDIA_INDICADORES': f_media_ind,
-            'GENERO_FEMININO': float(f_genero_fem), 'INSTITUICAO_COD': 0.0,
+            'GENERO_FEMININO': float(f_genero_fem),
+            'GENERO_NUM': float(f_genero_num),
+            'PV_NUM': 0.0,
+            'INSTITUICAO_COD': 0.0,
             'EVOLUCAO_PEDRA': float(f_ev_pedra),
         }
 
