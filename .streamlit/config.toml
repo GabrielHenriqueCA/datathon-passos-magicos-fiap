@@ -1,3 +1,6 @@
+[ui]
+hideSidebarNav = true
+
 [theme]
 base="light"
 primaryColor="#EE8133"

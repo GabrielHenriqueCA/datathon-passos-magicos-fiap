@@ -16,6 +16,7 @@ _Última atualização: 2026-04-24 — Sessão 15 (Revert + fix tela login)_
 - Código revertido para o commit `65ba995` (primeiro login do dia 23/04)
 - `pages/conta.py` removido, `.streamlit/config.toml` restaurado
 - **Tela de login corrigida**: removido `.login-box` div sombreado; tudo em `st.columns([1,1.2,1])` → `col2`; logo processada com PIL (remove pixels brancos > 200), base64-encoded inline; ordem: logo → título → subtítulo → inputs → botão → rodapé; sem container externo
+- **Nav automática suprimida (2 camadas)**: `[ui] hideSidebarNav = true` em `.streamlit/config.toml` + 7 regras CSS no bloco global do app.py (`stSidebarNav`, `ul`, `li`, `a[href]`, `nav`)
 
 ### Ajustes cirúrgicos (Sessão 14)
 1. **Menu lateral filtrado por perfil**: admin vê 7 opções do dashboard; aluno vê 4 opções (`🏠 Meu Painel`, `📝 Minhas Notas`, `🎮 Missões & Badges`, `🏆 Ranking`) — roteamento por `if/elif` sem tabs

@@ -775,6 +775,15 @@ if st.session_state.get('role') == 'aluno':
 # =============================================================================
 st.markdown("""
 <style>
+    /* ═══ Remove navegação automática de pages/ — todas as versões ═══ */
+    [data-testid="stSidebarNav"] { display: none !important; }
+    [data-testid="stSidebarNav"] + div { display: none !important; }
+    [data-testid="stSidebarNav"] + hr { display: none !important; }
+    section[data-testid="stSidebar"] ul { display: none !important; }
+    section[data-testid="stSidebar"] li { display: none !important; }
+    section[data-testid="stSidebar"] a[href] { display: none !important; }
+    nav[data-testid="stSidebarNav"] { display: none !important; }
+
     /* ═══ Google Fonts — Montserrat + Material Icons ═══ */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
     @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
