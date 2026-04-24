@@ -1,5 +1,5 @@
 # CONTEXT — Datathon Passos Mágicos
-_Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes cirúrgicos)_
+_Última atualização: 2026-04-24 — Sessão 15 (Revert + fix tela login)_
 
 ## Sessão 14 — Login system e ajustes de UI
 
@@ -11,6 +11,11 @@ _Última atualização: 2026-04-23 — Sessão 14 (Login + dual views + ajustes 
   - `role == 'aluno'` → roteia para `pages/aluno.render()` + `st.stop()`
   - `role == 'admin'` → executa fluxo normal do dashboard
 - Credenciais: `admin/admin123`, `aluno01-03/1234`
+
+### Sessão 15 — Revert + fix tela de login
+- Código revertido para o commit `65ba995` (primeiro login do dia 23/04)
+- `pages/conta.py` removido, `.streamlit/config.toml` restaurado
+- **Tela de login corrigida**: removido `.login-box` div sombreado; tudo em `st.columns([1,1.2,1])` → `col2`; logo processada com PIL (remove pixels brancos > 200), base64-encoded inline; ordem: logo → título → subtítulo → inputs → botão → rodapé; sem container externo
 
 ### Ajustes cirúrgicos (Sessão 14)
 1. **Menu lateral filtrado por perfil**: admin vê 7 opções do dashboard; aluno vê 4 opções (`🏠 Meu Painel`, `📝 Minhas Notas`, `🎮 Missões & Badges`, `🏆 Ranking`) — roteamento por `if/elif` sem tabs

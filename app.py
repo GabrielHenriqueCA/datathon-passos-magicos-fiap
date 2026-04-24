@@ -16,6 +16,8 @@ from plotly.subplots import make_subplots
 import os
 import warnings
 import joblib
+import base64
+from pathlib import Path
 
 from sklearn.preprocessing import StandardScaler
 from data.mock_alunos import USERS, ALUNOS_MOCK
@@ -650,6 +652,9 @@ st.set_page_config(
 # LOGIN — gate must come right after set_page_config
 # =============================================================================
 def _render_login():
+    from PIL import Image
+    import io as _io
+
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
@@ -659,22 +664,6 @@ def _render_login():
     }
     [data-testid="stSidebar"] { display: none !important; }
     [data-testid="stHeader"]  { background: transparent !important; }
-    .login-box {
-        background: linear-gradient(135deg, #1A2B3C 0%, #0F2030 100%);
-        border: 1px solid #2A3F55;
-        border-radius: 16px;
-        padding: 2.5rem 2rem;
-        max-width: 400px;
-        margin: 4rem auto 0;
-        text-align: center;
-    }
-    .login-title {
-        font-size: 1.5rem; font-weight: 800;
-        color: #F4B41A; margin-bottom: 0.3rem;
-    }
-    .login-sub {
-        font-size: 0.8rem; color: #7A8FA6; margin-bottom: 1.5rem;
-    }
     label { color: #C8CDD8 !important; }
     [data-testid="stTextInput"] > div > input {
         background: #0D1B2A !important;
@@ -690,30 +679,70 @@ def _render_login():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-    st.markdown("<div class='login-title'>✨ Passos Mágicos</div>", unsafe_allow_html=True)
-    st.markdown("<div class='login-sub'>Datathon Analytics — acesso restrito</div>", unsafe_allow_html=True)
+    # Processar logo — remove fundo branco
+    _src = None
+    for _lp in ["assets/logo_passos_magicos.png", "assets/logo.png"]:
+        if Path(_lp).exists():
+            try:
+                _img = Image.open(_lp).convert("RGBA")
+                _img.putdata([
+                    (r, g, b, 0) if (r > 200 and g > 200 and b > 200) else (r, g, b, a)
+                    for r, g, b, a in _img.getdata()
+                ])
+                _buf = _io.BytesIO()
+                _img.save(_buf, format="PNG")
+                _src = f"data:image/png;base64,{base64.b64encode(_buf.getvalue()).decode()}"
+            except Exception:
+                with open(_lp, "rb") as _f:
+                    _src = f"data:image/png;base64,{base64.b64encode(_f.read()).decode()}"
+            break
 
-    usuario = st.text_input("Usuário", key="login_user")
-    senha   = st.text_input("Senha",   key="login_pass", type="password")
+    _logo_tag = (
+        f'<img src="{_src}" style="width:130px; background:transparent; border:none; '
+        'box-shadow:none; filter: drop-shadow(0 4px 20px rgba(244,162,97,0.4));">'
+        if _src else ''
+    )
 
-    if st.button("Entrar"):
-        user_data = USERS.get(usuario)
-        if user_data and user_data['password'] == senha:
-            st.session_state['logged_in']  = True
-            st.session_state['role']       = user_data['role']
-            st.session_state['username']   = usuario
-            st.session_state['aluno_key']  = user_data['aluno_key']
-            st.rerun()
-        else:
-            st.error("Usuário ou senha inválidos.")
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    with col2:
+        st.markdown(f"""
+        <div style="text-align:center; padding: 40px 0 8px 0">
+            {_logo_tag}
+        </div>
+        <h1 style="text-align:center; color:#F4A261;
+                   margin:12px 0 4px 0; font-size:2rem; font-weight:700">
+            ✨ Passos Mágicos
+        </h1>
+        <p style="text-align:center; color:#8AAFC7;
+                  margin:0 0 28px 0; font-size:0.9rem; letter-spacing:0.3px">
+            Plataforma de Análise Educacional
+        </p>
+        """, unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style='text-align:center; margin-top:1.5rem; font-size:0.72rem; color:#3A5A7A;'>
-        admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
-    </div>
-    """, unsafe_allow_html=True)
+        usuario = st.text_input("Usuário", placeholder="Digite seu usuário", key="login_user")
+        senha   = st.text_input("Senha", type="password", placeholder="Digite sua senha", key="login_pass")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Entrar", use_container_width=True, type="primary"):
+            user_data = USERS.get(usuario)
+            if user_data and user_data['password'] == senha:
+                st.session_state['logged_in']  = True
+                st.session_state['role']       = user_data['role']
+                st.session_state['username']   = usuario
+                st.session_state['aluno_key']  = user_data['aluno_key']
+                st.rerun()
+            else:
+                st.error("Usuário ou senha inválidos.")
+
+        st.markdown("""
+        <p style="text-align:center; color:#4A6278;
+                  font-size:0.75rem; margin-top:24px">
+            Datathon Analytics — acesso restrito
+        </p>
+        <p style="text-align:center; color:#3A5A7A; font-size:0.72rem; margin-top:4px">
+            admin / admin123 &nbsp;·&nbsp; aluno01–03 / 1234
+        </p>
+        """, unsafe_allow_html=True)
 
 
 if not st.session_state.get('logged_in'):
