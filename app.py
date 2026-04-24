@@ -775,13 +775,8 @@ if st.session_state.get('role') == 'aluno':
 # =============================================================================
 st.markdown("""
 <style>
-    /* ═══ Remove navegação automática de pages/ — todas as versões ═══ */
+    /* ═══ Remove navegação automática de pages/ ═══ */
     [data-testid="stSidebarNav"] { display: none !important; }
-    [data-testid="stSidebarNav"] + div { display: none !important; }
-    [data-testid="stSidebarNav"] + hr { display: none !important; }
-    section[data-testid="stSidebar"] ul { display: none !important; }
-    section[data-testid="stSidebar"] li { display: none !important; }
-    section[data-testid="stSidebar"] a[href] { display: none !important; }
     nav[data-testid="stSidebarNav"] { display: none !important; }
 
     /* ═══ Google Fonts — Montserrat + Material Icons ═══ */
