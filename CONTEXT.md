@@ -1,5 +1,284 @@
 # CONTEXT — Datathon Passos Mágicos
-_Última atualização: 2026-04-24 — Sessão 15 (Revert + fix tela login)_
+_Última atualização: 2026-05-02 — Sessão 24 (Restauração da aba Treino gamificado)_
+
+## Sessão 24 — Restauração da aba Treino gamificado
+
+### Problema
+A aba `🎮 Treino` havia sido removida do `pages/aluno.py` durante os ajustes das Sessões 22/23.
+
+### Arquivo alterado
+`pages/aluno.py` — adição de CSS, três funções helper e nova aba. Nenhuma alteração em `app.py`.
+
+### Mudanças
+
+**CSS adicionado ao `_CSS`:**
+- `@keyframes bounce`, `shake`, `popIn` — animações do mascote
+- `.treino-btn-neutro` — fundo `#1B4F72`, borda `rgba(46,134,193,0.35)`
+- `.treino-btn-certo` — fundo `#1E8449`
+- `.treino-btn-errado` — fundo `#922B21`
+
+**Funções novas (antes de `render()`):**
+- `_init_treino_state(aluno_key, aluno)` — inicializa `st.session_state[f'treino_{aluno_key}']` com 10 questões aleatórias da matéria mais fraca do aluno
+- `_render_treino_resultado(sk, aluno_key, g)` — tela de resultado: placar, barra de desempenho, XP total, badge (💎 Perfeito 10/10 · 🎯 Elite 8+), botões Tentar Novamente / Voltar ao Painel
+- `_render_treino(aluno_key, aluno, g)` — mecânica principal: cabeçalho motivacional (1ª questão), barra de progresso "Questão X de 10", card da questão, grid 2×2 de botões (antes de responder = st.button) ou divs coloridas (após responder), feedback animado com +10 XP (acerto) / +2 XP (erro), botão Próxima / Ver Resultado
+
+**`st.tabs` atualizado:**
+```python
+tab_visao, tab_notas, tab_missoes, tab_ranking, tab_treino = st.tabs([
+    "📊 Meu Painel", "📚 Minhas Notas", "🎯 Missões & Badges", "🏆 Ranking", "🎮 Treino"
+])
+```
+
+**Bloco adicionado ao final de `render()`:**
+```python
+with tab_treino:
+    _render_treino(aluno_key, aluno, g)
+```
+
+**Estado via `st.session_state[f'treino_{aluno_key}']`:**
+`questoes`, `atual`, `respondida`, `acertos`, `concluido`, `materia`, `xp_sessao`, `resposta_sel`
+
+**Fonte de questões:** `data/questoes.py` — 20 questões por matéria (Matemática, Português, Inglês), 10 sorteadas aleatoriamente via `random.shuffle`.
+
+**Nota:** `app.py` não tem `st.radio` de navegação para o aluno (apenas botão Sair no sidebar), portanto o Treino foi adicionado como 5ª aba interna do `pages/aluno.py`, não como item de radio.
+
+---
+
+## Sessão 23 — Fix HTML bruto na aba Ranking
+
+## Sessão 23 — Fix HTML bruto na aba Ranking
+
+### Problema
+A aba Ranking (🏆) renderizava HTML como texto bruto. Causa raiz: f-string com aspas duplas aninhadas dentro de `f"""..."""` — inválido em Python < 3.12 (SyntaxError em tempo de análise), impedindo o módulo de ser importado e fazendo o Streamlit exibir o traceback/HTML como texto.
+
+### Arquivo alterado
+`pages/aluno.py` — linhas da timeline na aba Ranking. Nenhuma alteração em `app.py`.
+
+### Mudança aplicada
+Na seção "Linha do Tempo — INDE" da aba Ranking, o f-string do loop de barras usava expressões com aspas duplas dentro de `f"""..."""`:
+
+```python
+# ANTES (SyntaxError em Python < 3.12):
+<div style='...; color:{"#E8EDF2" if is_last else "#8AAFC7"}; font-weight:{"700" if is_last else "400"}; ...'>
+{"<div style='...'>●&nbsp;Atual</div>" if is_last else ""}
+```
+
+Corrigido pré-computando as variáveis antes do f-string:
+
+```python
+# DEPOIS (compatível com Python 3.8+):
+year_color   = '#E8EDF2' if is_last else '#8AAFC7'
+year_weight  = '700'     if is_last else '400'
+atual_marker = "<div style='...'>●&nbsp;Atual</div>" if is_last else ""
+# f-string passa a usar {year_color}, {year_weight}, {atual_marker}
+```
+
+Nenhuma mudança de lógica, dados ou estilo visual. Todos os `st.markdown` da aba já tinham `unsafe_allow_html=True` corretamente.
+
+---
+
+## Sessão 22 — Fix azul escuro nos cantos da visão do Aluno
+
+### Problema
+Containers com `border-radius` exibiam cantos com tons de azul escuro fora da paleta (`#1A2B3C`, `#0F2030`, `#1E3A5A`, `#0A1520`, `#2A3F55` etc.) que "vazavam" para fora dos cards ou apareciam em elementos estruturais que deveriam ser transparentes.
+
+### Arquivo alterado
+`pages/aluno.py` — apenas o bloco `_CSS` e cores inline/Plotly. Nenhuma alteração em `app.py`.
+
+### Paleta oficial aplicada
+| Token | Hex | Uso |
+|---|---|---|
+| Transparente | — | Containers estruturais (stColumn, stVerticalBlock…) |
+| `#0D1B2A` | fundo escuro | Fundo de página e sidebar |
+| `#132233` | card escuro | `.aluno-card`, `.badge-chip`, gauge bgcolor, radar bgcolor |
+| `rgba(46,134,193,0.35)` | borda azul | Bordas de cards, badges, hr, gauge bordercolor, grid Plotly |
+| `#F4A261` | laranja | Valores XP, destaques, barra XP, threshold gauge |
+| `#8AAFC7` | azul aço | Textos secundários, labels, ticks Plotly |
+| `#E8EDF2` | branco suave | Textos principais, h1–h4, font_color Plotly |
+
+### Mudanças no `_CSS`
+1. **Sidebar**: `#0A1520` → `#0D1B2A` (cor fora da paleta)
+2. **Sidebar `*`**: `#C8CDD8` → `#8AAFC7`
+3. **`.aluno-card`**: gradiente `#1A2B3C → #0F2030` → sólido `#132233`; borda `#2A3F55` → `rgba(46,134,193,0.35)`
+4. **`.aluno-card-title/sub`**: `#7A8FA6` → `#8AAFC7`
+5. **`.aluno-card-value`**: `#F4B41A` → `#F4A261`
+6. **`.badge-chip`**: `#1E3A5A` → `#132233`; borda `#2E5A80` → `rgba(46,134,193,0.35)`; cor `#A8C8E8` → `#8AAFC7`
+7. **`.badge-earned`**: `#1A4A2E` → `#132233`; borda `#2A7A4E` → `rgba(46,134,193,0.35)`; cor `#6ADAA0` → `#F4A261`
+8. **`.xp-bar-bg`**: `#1A2B3C` → `#132233`
+9. **`.xp-bar-fill`**: gradiente `#F4B41A, #EE8133` → sólido `#F4A261`
+10. **`.nota-media`**: cor `#F4B41A` → `#F4A261`
+11. **`h1–h4`**: `#E8EAF0` → `#E8EDF2`
+12. **`hr`**: `#2A3F55` → `rgba(46,134,193,0.35)`
+13. **Botões**: `#2D325E/#4A4F7A` → `#132233/rgba(46,134,193,0.35)`; hover `#3D4270` → `#0D1B2A`
+14. **Adicionadas regras de containers transparentes**: `stVerticalBlock`, `stHorizontalBlock`, `stColumn`, `stTabsContent`, `stMarkdownContainer`, `stMainBlockContainer`, `.stMarkdown`, `.element-container`, `.block-container` → `transparent`
+15. **Tab panels**: `[data-baseweb="tab-panel"]`, `[role="tabpanel"]` → `#0D1B2A`
+
+### Mudanças nos inline styles HTML
+- Todas as ocorrências de `#E8EAF0` → `#E8EDF2`
+- Todas as ocorrências de `#7A8FA6` → `#8AAFC7`
+- Todas as ocorrências de `#F4B41A` → `#F4A261`
+- Bordas inline `#2A3F55` (ranking) → `rgba(46,134,193,0.35)`
+
+### Mudanças nos gráficos Plotly
+- **Gauge INDE**: `bgcolor #1A2B3C` → `#132233`; `bordercolor #2A3F55` → `rgba(46,134,193,0.35)`; número/barra `#F4B41A` → `#F4A261`; threshold `#EE8133` → `#F4A261`; ticks `#7A8FA6` → `#8AAFC7`; step topo `#1A2B3C` → `#132233`; `font_color #E8EAF0` → `#E8EDF2`
+- **Line chart Evolução INDE**: linha/marcador `#F4B41A/#EE8133` → `#F4A261`; gridcolor `#1A2B3C` → `rgba(46,134,193,0.15)`; `font_color #E8EAF0` → `#E8EDF2`
+- **Radar chart**: `polar bgcolor #1A2B3C` → `#132233`; gridlines `#2A3F55` → `rgba(46,134,193,0.35)`; ticks `#7A8FA6/#C8CDD8` → `#8AAFC7`; fill `rgba(244,180,26,0.15)` → `rgba(244,162,97,0.15)`; linha/marcador `#F4B41A/#EE8133` → `#F4A261`; `font_color #E8EAF0` → `#E8EDF2`
+
+### Cores semânticas mantidas (não são azul escuro)
+- `#6ADAA0` / `#F08080` — indicadores de risco/saúde nas predições e barras de indicadores
+- `#1A4A2E` / `#3A3010` / `#4A1520` — fundos dos pills de nota (verde/âmbar/vermelho)
+
+### Nota sobre diretório
+O diretório `pages/` havia sido deletado da árvore de trabalho. Foi recriado e `pages/aluno.py` foi restaurado a partir do commit `89958ef` com todas as correções desta sessão aplicadas.
+
+---
+
+## Sessão 21 — Unificação visual completa: Aluno = Admin
+
+### Objetivo
+Fazer a visão do aluno usar exatamente o mesmo tema visual do admin: fundo `#FAFAFA`, sidebar roxo gradiente `#2D325E → #1E2245`, botões laranja `#EE8133`, tabs roxo, fontes Montserrat.
+
+### Arquivo alterado
+`pages/aluno.py` — apenas o bloco `_CSS` e os layouts Plotly. Nenhuma alteração no `app.py`.
+
+### Mudanças no `_CSS`
+O bloco `_CSS` foi reescrito: **removidos** todos os overrides de dark theme que conflitavam com o CSS compartilhado do `app.py`:
+- `html/body/stAppViewContainer/stMain { background: #0D1B2A }` → **removido** (herda #FAFAFA do admin)
+- `h1–h4 { color: #E8EDF2 }` → **removido** (herda #333333 do admin)
+- `hr { border-color: rgba(46,134,193,0.2) }` → **removido**
+- Botões com gradiente azul `#1B4F72 → #2E86C1` → **removidos** (herda laranja do admin)
+- Tabs com `#132233/#2E86C1` → **removidos** (herda tabs roxo do admin)
+- Labels com `#8AAFC7` → **removidos**
+- Todos os container fixes da Sessão 20 → **removidos** (não necessários sem dark theme)
+
+**Mantidas** apenas as classes de componente gamificado exclusivas:
+- `.aluno-card` — dark card `#132233` sobre fundo claro (contraste intencional)
+- `.aluno-card-title/value/sub` — cores da paleta do aluno
+- `.badge-chip/.badge-earned` — badges gamificados
+- `.xp-bar-bg/.xp-bar-fill` — barra de XP laranja
+- `.nota-pill/.nota-alta/.nota-media/.nota-baixa` — pills de notas
+- `@keyframes bounce/shake/popIn/spin` — animações do Treino
+- `.treino-btn-neutro/certo/errado/apagado` — botões do jogo (dark intencional dentro dos cards)
+
+### Mudanças nos gráficos Plotly
+3 gráficos tinham `font_color='#E8EAF0'` (branco — invisível no fundo claro) e `gridcolor` escuro:
+- **Gauge INDE**: `font_color` → `#555555`
+- **Line chart Evolução INDE**: `font_color` → `#333333`, `gridcolor` → `#E0E0E0`
+- **Radar chart Indicadores**: `font_color` → `#333333` (bgcolor polar `#1A2B3C` mantido — dark chart box intencional)
+
+### Resultado verificado visualmente (browser subagent)
+| Elemento | Admin | Aluno | Status |
+|---|---|---|---|
+| Fundo | #FAFAFA | #FAFAFA | ✅ |
+| Sidebar | Roxo gradiente | Roxo gradiente | ✅ |
+| Botão Sair | Laranja | Laranja | ✅ |
+| Cards gamificados | Dark #132233 | Dark #132233 | ✅ |
+| Tabs | Roxo ativo | Roxo ativo | ✅ |
+| Gráficos | Fundo transparente | Fundo transparente | ✅ |
+| Títulos | #333333 Montserrat | #333333 Montserrat | ✅ |
+
+App rodando em: http://localhost:8507
+
+---
+
+## Sessão 20 — Fix fundos pretos na visão do aluno
+
+### Problema
+O Streamlit injeta automaticamente um fundo escuro próximo de preto em containers internos (`stVerticalBlock`, `stHorizontalBlock`, `stColumn`, painéis de tabs, etc.) quando o CSS do tema dark está parcialmente ativo. Isso causava fundos pretos visíveis em cards e seções da visão do aluno.
+
+### Arquivo alterado
+`pages/aluno.py` — apenas o bloco `_CSS` (HTML inline/CSS local). Nenhuma alteração no `app.py` ou CSS global.
+
+### Solução
+Adicionadas regras CSS cirúrgicas no bloco `_CSS` de `pages/aluno.py` para forçar `background-color: transparent !important` nos containers internos do Streamlit, fazendo-os herdar corretamente o `#0D1B2A` do fundo principal. Os painéis de tab (`[data-baseweb="tab-panel"]`, `[role="tabpanel"]`) recebem `background-color: #0D1B2A !important` explicitamente.
+
+### Seletores corrigidos
+- `[data-testid="stVerticalBlock"]` → transparent
+- `[data-testid="stHorizontalBlock"]` → transparent
+- `[data-testid="stColumn"]` → transparent
+- `[data-testid="stTabsContent"]` → transparent
+- `[data-testid="stMarkdownContainer"]` → transparent
+- `[data-testid="stMainBlockContainer"]` → transparent
+- `.stMarkdown`, `.element-container`, `.block-container` → transparent
+- `[data-baseweb="tab-panel"]`, `[role="tabpanel"]` → `#0D1B2A`
+
+### Verificação
+Inspecionado visualmente via browser subagent: todas as 5 abas da visão do aluno confirmadas sem fundos pretos. Cards com `#132233`, fundo principal `#0D1B2A`, botões com gradiente azul, tabs com `#132233`/`#2E86C1`.
+
+---
+
+## Sessão 19 — Unificação visual Admin = Aluno
+
+### Problema raiz
+O CSS global do admin ficava depois do `st.stop()` do aluno → nunca aplicava ao perfil aluno.
+O `_CSS` de `pages/aluno.py` forçava dark theme (#0D1B2A) que conflitava com o admin.
+
+### Solução (3 mudanças)
+
+**1. app.py — bloco "Tema compartilhado"** inserido logo após `if not logged_in → st.stop()`,
+antes do roteamento de perfil. Define: Montserrat, :root vars, fundo #FAFAFA, sidebar roxo gradiente,
+botões laranja, tabs roxo, stHeader transparente, stSidebarNav oculto, #MainMenu/footer ocultos.
+Roda para admin E aluno (admin pode ter duplicação idempotente com seu bloco CSS original).
+
+**2. pages/aluno.py — `_CSS` reescrito**: removidos todos os overrides de dark theme
+(html/body/sidebar/h1-h6/hr/botões). Mantidos apenas:
+- `.aluno-card`: bg=#132233, border=rgba(46,134,193,0.35) — dark card on light bg
+- `.aluno-card-value`: color=#F4A261 (laranja quente)
+- `.aluno-card-title`/`.aluno-card-sub`: color=#8AAFC7 (azul aço)
+- `.badge-chip`: bg=#1B4F72, border azul
+- `.xp-bar-bg`: bg=#D9E8F5 (claro), fill=laranja gradiente
+- `.nota-pill` classes: mantidas (usadas dentro de cards escuros)
+- `@keyframes` e `.treino-btn-*`: mantidos (UI do jogo)
+
+**3. pages/aluno.py — cabeçalho do aluno**: inline styles atualizados:
+- Nome: `#E8EAF0` → `#2D325E`
+- Subtítulo/labels: `#7A8FA6` → `#555555`
+- XP valor: `#F4B41A` → `#F4A261`
+
+## Sessão 18 — Fix TypeError + supressão de menu
+
+### Problema 1 — TypeError na chamada de _render_aluno (app.py)
+- Adicionado `pagina_aluno = st.radio(...)` ao sidebar do aluno com as 5 opções de navegação
+- Chamada atualizada para `_render_aluno(aluno_key, aluno_data, pagina_aluno)`
+- Assinatura de `render` em `pages/aluno.py` atualizada para `render(aluno_key, aluno, pagina_aluno=None)` — sem mudanças internas
+
+### Problema 2 — Menu pages/ aparecendo para aluno
+- Causa: CSS de supressão de `stSidebarNav` ficava no bloco admin (após `st.stop()` do aluno)
+- Fix: injetado bloco CSS com as duas regras de supressão **imediatamente após `st.set_page_config()`**, antes de qualquer roteamento — garante execução para todos os perfis
+- `[ui] hideSidebarNav = true` em `.streamlit/config.toml` já estava correto
+
+## Sessão 17 — Aba Treino gamificada (Duolingo-style)
+
+### Novos elementos em pages/aluno.py
+- **6ª aba `🎮 Treino`** adicionada à visão do aluno
+- **Lógica de matéria fraca**: compara `nota_mat / nota_port / nota_ing` → foca na pior
+- **Mensagem motivacional** na 1ª questão: "Detectamos que sua nota em [Matéria] está mais baixa. Vamos praticar juntos! 💪"
+- **10 questões sorteadas** aleatoriamente de `data/questoes.py` (pool de 20/matéria)
+- **Uma questão por vez** com grid 2×2 de botões interativos
+- **Feedback animado**: acerto → `bounce 🎉 ��� 🏆 +10 XP`; erro → `shake 😅 resposta correta`
+- **Tela de resultado final**: mascote animado, barra de acerto, XP ganho, badge desbloqueado
+- **XP por sessão**: acerto=+10 XP, erro=+2 XP, bônus conclusão=+20 XP
+- **2 novos badges**: `treino_elite` (8+ acertos) e `treino_perfeito` (10/10)
+- **Animações CSS** no `_CSS` global: `@keyframes bounce/shake/popIn/spin` + classes `.treino-btn-*`
+- **Helpers criados**: `_init_treino_state()`, `_render_treino_questao()`, `_render_treino_resultado()`
+- **Estado**: `st.session_state[f'treino_{aluno_key}']` com dict `{questoes, atual, respondida, acertos, concluido, materia, xp_sessao, resposta_sel}`
+- **"Tentar Novamente"** reseta estado e sorteia novas 10 questões da mesma matéria
+
+## Sessão 16 — Fix header branco + aba Quiz
+
+### Fix faixa branca no topo (app.py CSS global)
+Adicionadas 3 regras cirúrgicas ao final do bloco CSS global de `app.py` para remover a faixa branca nativa do Streamlit:
+- `[data-testid="stHeader"]` → `background: transparent`
+- `[data-testid="stToolbar"]` → `background: transparent`
+- `[data-testid="collapsedControl"]` e `[data-testid="stSidebarCollapsedControl"]` → `background: transparent`, `border: none`, `box-shadow: none`
+As novas regras ficam **após** a regra existente `background: white !important` do `collapsedControl` (linha ~1003), garantindo que a sobrescrevem pela ordem de cascade.
+
+### Aba Quiz em pages/aluno.py
+Integrado `data/questoes.py` (60 questões: 20 Mat / 20 Port / 20 Inglês) à visão gamificada do aluno:
+- Nova aba `🧠 Quiz` (5ª aba) com seletor de matéria, barra de progresso, questão aleatória, 4 opções, feedback (acerto/erro + dica), +50 XP por acerto
+- Estado persistido em `st.session_state[f'quiz_{aluno_key}']`
+- 4 novos badges: 🧠 Primeiro Quiz, 🎯 5 Acertos, 🏆 10 Acertos, 🔢 Mestre em Matemática
+- Painel de desempenho geral (acertos/total por matéria) ao final da aba
 
 ## Sessão 14 — Login system e ajustes de UI
 

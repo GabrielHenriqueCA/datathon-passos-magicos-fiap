@@ -648,6 +648,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Suprime nav automática de pages/ para todos os perfis (deve rodar antes do roteamento)
+st.markdown("""
+<style>
+[data-testid="stSidebarNav"] { display: none !important; }
+nav[data-testid="stSidebarNav"] { display: none !important; }
+</style>
+""", unsafe_allow_html=True)
+
 # =============================================================================
 # LOGIN — gate must come right after set_page_config
 # =============================================================================
@@ -748,6 +756,76 @@ def _render_login():
 if not st.session_state.get('logged_in'):
     _render_login()
     st.stop()
+
+# Tema compartilhado — roda para todos os perfis logados (admin e aluno)
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+:root {
+    --pm-roxo: #2D325E; --pm-roxo-escuro: #1E2245; --pm-roxo-claro: #4A4F7A;
+    --pm-laranja: #EE8133; --pm-amarelo: #F4B41A;
+    --pm-fundo: #FAFAFA; --pm-branco: #FFFFFF;
+    --pm-texto: #333333; --pm-texto-leve: #555555;
+    --pm-borda: #E0E0E0; --pm-sombra: rgba(45,50,94,0.10);
+}
+html, body, .main, .stApp, [data-testid="stAppViewContainer"] {
+    font-family: 'Montserrat', sans-serif !important;
+    background-color: var(--pm-fundo) !important;
+}
+.stApp { background: var(--pm-fundo) !important; }
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, var(--pm-roxo) 0%, var(--pm-roxo-escuro) 100%) !important;
+}
+section[data-testid="stSidebar"] * { color: white !important; }
+section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !important; }
+h1,h2,h3,h4,h5,h6,
+.stMarkdown h1,.stMarkdown h2,.stMarkdown h3 {
+    font-family: 'Montserrat', sans-serif !important;
+    color: var(--pm-texto) !important;
+    font-weight: 700 !important;
+}
+.stButton > button {
+    background: var(--pm-laranja) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 25px !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 2rem !important;
+    box-shadow: 0 4px 12px rgba(238,129,51,0.25) !important;
+}
+.stButton > button:hover {
+    background: #D9711F !important;
+    box-shadow: 0 6px 20px rgba(238,129,51,0.35) !important;
+    transform: translateY(-2px);
+}
+.stTabs [data-baseweb="tab-list"] { gap: 8px; background: transparent; }
+.stTabs [data-baseweb="tab"] {
+    background-color: var(--pm-branco);
+    border: 1px solid var(--pm-borda);
+    border-radius: 10px;
+    padding: 10px 20px;
+    color: var(--pm-texto) !important;
+    font-weight: 600;
+}
+.stTabs [data-baseweb="tab"]:hover { border-color: var(--pm-roxo-claro); color: var(--pm-roxo) !important; }
+.stTabs [aria-selected="true"] {
+    background: var(--pm-roxo) !important;
+    color: white !important;
+    border-color: var(--pm-roxo) !important;
+}
+[data-testid="stMetricValue"] { font-size:1.8rem; color:var(--pm-roxo) !important; font-weight:700 !important; }
+[data-testid="stMetricLabel"] { color:var(--pm-texto-leve) !important; font-weight:600 !important; font-size:0.75rem !important; }
+[data-testid="stHeader"]  { background: transparent !important; }
+[data-testid="stToolbar"] { background: transparent !important; }
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] { background: transparent !important; border: none !important; box-shadow: none !important; }
+[data-testid="stSidebarNav"], nav[data-testid="stSidebarNav"] { display: none !important; }
+#MainMenu { visibility: hidden; }
+footer    { visibility: hidden; }
+.stAppDeployButton { display: none !important; }
+</style>
+""", unsafe_allow_html=True)
 
 if st.session_state.get('role') == 'aluno':
     from pages.aluno import render as _render_aluno
@@ -1117,6 +1195,20 @@ st.markdown("""
         background: var(--pm-roxo-claro);
         border-radius: 3px;
     }
+
+    /* ═══ Header nativo — remove faixa branca do topo ═══ */
+    [data-testid="stHeader"] {
+        background: transparent !important;
+    }
+    [data-testid="stToolbar"] {
+        background: transparent !important;
+    }
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1291,64 +1383,158 @@ st.markdown("")
 # PÁGINA: VISÃO GERAL
 # =============================================================================
 if pagina == "📊 Visão Geral":
-    
+
+    st.markdown("""<div style='margin-bottom:1.5rem;'><h2 style='margin:0; color:var(--pm-roxo);'>📊 Visão Geral do Programa</h2><p style='color:var(--pm-texto-leve); font-size:0.9rem; margin:0.3rem 0 0 0;'>Panorama consolidado dos indicadores educacionais — dados de 2022</p></div>""", unsafe_allow_html=True)
+
     col_a, col_b = st.columns(2)
-    
+
     with col_a:
-        # Distribuição por Pedra
         pedra_counts = df_xlsx['PEDRA_2022'].value_counts().reset_index()
         pedra_counts.columns = ['Pedra', 'Contagem']
-        fig = px.pie(
-            pedra_counts, values='Contagem', names='Pedra',
-            color='Pedra', color_discrete_map=CORES_PEDRAS,
-            title='🏆 Distribuição por Classificação (Pedra) - 2022',
-            template='plotly_white', hole=0.4
-        )
+        fig = px.pie(pedra_counts, values='Contagem', names='Pedra', color='Pedra', color_discrete_map=CORES_PEDRAS, title='🏆 Distribuição por Classificação (Pedra) - 2022', template='plotly_white', hole=0.4)
         fig.update_traces(textposition='inside', textinfo='percent+label')
         st.plotly_chart(fig, use_container_width=True)
-    
+        top_pedra = pedra_counts.iloc[0]
+        total_alunos = pedra_counts['Contagem'].sum()
+        top_pct = (top_pedra['Contagem'] / total_alunos * 100)
+        pedras_avancadas = pedra_counts[pedra_counts['Pedra'].isin(['Ametista', 'Topázio'])]['Contagem'].sum()
+        pct_avancadas = (pedras_avancadas / total_alunos * 100) if total_alunos > 0 else 0
+        st.markdown(f"""<div class="insight-box"><p>💡 <strong>Insight:</strong> A classificação mais frequente é <strong>{top_pedra['Pedra']}</strong> ({top_pct:.1f}%). Apenas <strong>{pct_avancadas:.1f}%</strong> alcançaram Ametista ou Topázio.</p></div>""", unsafe_allow_html=True)
+
     with col_b:
-        # Distribuição de INDE
-        fig = px.histogram(
-            df_xlsx, x='INDE', nbins=30,
-            color_discrete_sequence=['#2D325E'],
-            title='📊 Como os alunos estão distribuídos por nível educacional (2022)',
-            template='plotly_white'
-        )
-        # Linhas de corte das pedras
+        fig = px.histogram(df_xlsx, x='INDE', nbins=30, color_discrete_sequence=['#2D325E'], title='📊 Distribuição do INDE (2022)', template='plotly_white')
         for nome, limite in [('Quartzo', 5.506), ('Ágata', 6.868), ('Ametista', 8.230)]:
-            fig.add_vline(x=limite, line_dash='dash',
-                         line_color=CORES_PEDRAS.get(nome, 'white'),
-                         annotation_text=f'{nome}: {limite}')
+            fig.add_vline(x=limite, line_dash='dash', line_color=CORES_PEDRAS.get(nome, 'white'), annotation_text=f'{nome}: {limite}')
         st.plotly_chart(fig, use_container_width=True)
-    
+        inde_mean = df_xlsx['INDE'].mean()
+        inde_std = df_xlsx['INDE'].std()
+        pct_abaixo_5 = (df_xlsx['INDE'] < 5.506).mean() * 100
+        pct_acima_8 = (df_xlsx['INDE'] >= 8.230).mean() * 100
+        st.markdown(f"""<div class="insight-box"><p>💡 <strong>Insight:</strong> INDE médio <strong>{inde_mean:.2f}</strong> (σ={inde_std:.2f}). <strong>{pct_abaixo_5:.1f}%</strong> no Quartzo, <strong>{pct_acima_8:.1f}%</strong> em Ametista+.</p></div>""", unsafe_allow_html=True)
+
     col_c, col_d = st.columns(2)
-    
+
     with col_c:
-        # Boxplot dos indicadores
-        indicadores_df = df_xlsx[['IAA', 'IEG', 'IPS', 'IDA', 'IPV', 'IAN']].melt(
-            var_name='Indicador', value_name='Valor'
-        )
-        fig = px.box(
-            indicadores_df, x='Indicador', y='Valor',
-            color='Indicador',
-            title='📦 Panorama dos Indicadores Educacionais',
-            template='plotly_white'
-        )
+        indicadores_cols = ['IAA', 'IEG', 'IPS', 'IDA', 'IPV', 'IAN']
+        indicadores_df = df_xlsx[indicadores_cols].melt(var_name='Indicador', value_name='Valor')
+        fig = px.box(indicadores_df, x='Indicador', y='Valor', color='Indicador', title='📦 Panorama dos Indicadores Educacionais', template='plotly_white')
         st.plotly_chart(fig, use_container_width=True)
-    
+        medias_ind = df_xlsx[indicadores_cols].mean()
+        stds_ind = df_xlsx[indicadores_cols].std()
+        melhor_ind = medias_ind.idxmax()
+        pior_ind = medias_ind.idxmin()
+        mais_disperso = stds_ind.idxmax()
+        st.markdown(f"""<div class="insight-box"><p>💡 <strong>Insight:</strong> Melhor média: <strong>{melhor_ind}</strong> ({medias_ind[melhor_ind]:.2f}). Pior: <strong>{pior_ind}</strong> ({medias_ind[pior_ind]:.2f}). Maior dispersão: <strong>{mais_disperso}</strong> (σ={stds_ind[mais_disperso]:.2f}).</p></div>""", unsafe_allow_html=True)
+
     with col_d:
-        # Gênero
         genero_counts = df_xlsx['GENERO'].value_counts().reset_index()
         genero_counts.columns = ['Gênero', 'Contagem']
-        fig = px.pie(
-            genero_counts, values='Contagem', names='Gênero',
-            color='Gênero',
-            color_discrete_map={'Menina': '#FF69B4', 'Menino': '#4169E1'},
-            title='👫 Distribuição por Gênero',
-            template='plotly_white', hole=0.4
-        )
+        fig = px.pie(genero_counts, values='Contagem', names='Gênero', color='Gênero', color_discrete_map={'Menina': '#FF69B4', 'Menino': '#4169E1'}, title='👫 Distribuição por Gênero', template='plotly_white', hole=0.4)
         st.plotly_chart(fig, use_container_width=True)
+        total_gen = genero_counts['Contagem'].sum()
+        gen_pcts = {row['Gênero']: row['Contagem'] / total_gen * 100 for _, row in genero_counts.iterrows()}
+        if 'Menina' in df_xlsx['GENERO'].values and 'Menino' in df_xlsx['GENERO'].values:
+            inde_f = df_xlsx[df_xlsx['GENERO'] == 'Menina']['INDE'].mean()
+            inde_m = df_xlsx[df_xlsx['GENERO'] == 'Menino']['INDE'].mean()
+            diff_gen = inde_f - inde_m
+            if abs(diff_gen) < 0.3:
+                comp_text = f"INDEs próximos (♀ {inde_f:.2f} vs ♂ {inde_m:.2f}) — <strong>equidade</strong>."
+            elif diff_gen > 0:
+                comp_text = f"Meninas com INDE superior ({inde_f:.2f} vs {inde_m:.2f}, Δ={diff_gen:+.2f})."
+            else:
+                comp_text = f"Meninos com INDE superior ({inde_m:.2f} vs {inde_f:.2f}, Δ={abs(diff_gen):.2f})."
+        else:
+            comp_text = "Dados insuficientes para comparação de desempenho por gênero."
+        gen_str = ", ".join([f"{g}: {p:.1f}%" for g, p in gen_pcts.items()])
+        st.markdown(f"""<div class="insight-box"><p>💡 <strong>Insight:</strong> {gen_str}. {comp_text}</p></div>""", unsafe_allow_html=True)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # SEÇÃO EXTRA: Evolução Temporal
+    # ═══════════════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("""<h3 style='color:var(--pm-roxo); margin-bottom:0.2rem;'>📈 Evolução Temporal dos Indicadores</h3><p style='color:var(--pm-texto-leve); font-size:0.85rem;'>Trajetória dos indicadores-chave ao longo dos anos do programa</p>""", unsafe_allow_html=True)
+
+    col_evo1, col_evo2 = st.columns(2)
+
+    with col_evo1:
+        inde_por_ano = df_long.groupby('ANO')['INDE'].agg(['mean', 'median']).reset_index()
+        fig_evo = go.Figure()
+        fig_evo.add_trace(go.Scatter(x=inde_por_ano['ANO'], y=inde_por_ano['mean'], mode='lines+markers+text', text=inde_por_ano['mean'].round(2), textposition='top center', name='Média INDE', line=dict(color='#EE8133', width=3), marker=dict(size=12, color='#EE8133')))
+        fig_evo.add_trace(go.Scatter(x=inde_por_ano['ANO'], y=inde_por_ano['median'], mode='lines+markers', name='Mediana INDE', line=dict(color='#2D325E', width=2, dash='dash'), marker=dict(size=8)))
+        fig_evo.update_layout(title='📊 Evolução do INDE', xaxis_title='Ano', yaxis_title='INDE', template='plotly_white', yaxis=dict(range=[0, 10]), height=350, legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
+        st.plotly_chart(fig_evo, use_container_width=True)
+        if len(inde_por_ano) >= 2:
+            diff_total = inde_por_ano['mean'].iloc[-1] - inde_por_ano['mean'].iloc[0]
+            trend_icon = '📈' if diff_total > 0.1 else ('📉' if diff_total < -0.1 else '➡️')
+            st.markdown(f"""<div class="insight-box"><p>💡 <strong>Tendência:</strong> {trend_icon} INDE variou de <strong>{inde_por_ano['mean'].iloc[0]:.2f}</strong> ({int(inde_por_ano['ANO'].iloc[0])}) para <strong>{inde_por_ano['mean'].iloc[-1]:.2f}</strong> ({int(inde_por_ano['ANO'].iloc[-1])}), Δ = <strong>{diff_total:+.2f}</strong>.</p></div>""", unsafe_allow_html=True)
+
+    with col_evo2:
+        inds_evo = ['IDA', 'IEG', 'IAA', 'IPS']
+        medias_ano = df_long.groupby('ANO')[inds_evo].mean().reset_index()
+        fig_multi = go.Figure()
+        cores_inds = {'IDA': '#2ECC71', 'IEG': '#3498DB', 'IAA': '#E74C3C', 'IPS': '#9B59B6'}
+        for ind in inds_evo:
+            if ind in medias_ano.columns:
+                fig_multi.add_trace(go.Scatter(x=medias_ano['ANO'], y=medias_ano[ind], mode='lines+markers', name=ind, line=dict(color=cores_inds.get(ind, '#888'), width=2), marker=dict(size=8)))
+        fig_multi.update_layout(title='📈 Indicadores-Chave por Ano', xaxis_title='Ano', yaxis_title='Média', template='plotly_white', yaxis=dict(range=[0, 10]), height=350, legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
+        st.plotly_chart(fig_multi, use_container_width=True)
+        if len(medias_ano) >= 2:
+            melhorias = {ind: medias_ano[ind].iloc[-1] - medias_ano[ind].iloc[0] for ind in inds_evo if ind in medias_ano.columns}
+            melhor_evol = max(melhorias, key=melhorias.get)
+            pior_evol = min(melhorias, key=melhorias.get)
+            st.markdown(f"""<div class="insight-box"><p>💡 <strong>Destaques:</strong> Maior evolução: <strong>{melhor_evol}</strong> ({melhorias[melhor_evol]:+.2f}). {'Queda' if melhorias[pior_evol] < 0 else 'Menor ganho'}: <strong>{pior_evol}</strong> ({melhorias[pior_evol]:+.2f}).</p></div>""", unsafe_allow_html=True)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Radar por Pedra + Top Alunos em Risco
+    # ═══════════════════════════════════════════════════════════════════════
+    st.markdown("---")
+    col_radar, col_alertas = st.columns([1.2, 0.8])
+
+    with col_radar:
+        st.markdown("""<h3 style='color:var(--pm-roxo);'>🎯 Perfil por Classificação (Pedra)</h3>""", unsafe_allow_html=True)
+        inds_radar = ['IDA', 'IEG', 'IAA', 'IPS', 'IPV', 'IAN']
+        pedra_order = ['Quartzo', 'Ágata', 'Ametista', 'Topázio']
+        pm_radar = df_xlsx.copy()
+        pm_radar['PEDRA_CLEAN'] = pm_radar['PEDRA_2022'].replace({'Agata': 'Ágata', 'Topazio': 'Topázio'})
+        radar_data = pm_radar.groupby('PEDRA_CLEAN')[inds_radar].mean()
+        radar_data = radar_data.reindex([p for p in pedra_order if p in radar_data.index]).dropna()
+        fig_radar = go.Figure()
+        for pedra in radar_data.index:
+            vals = radar_data.loc[pedra].tolist()
+            vals.append(vals[0])
+            cats = inds_radar + [inds_radar[0]]
+            fig_radar.add_trace(go.Scatterpolar(r=vals, theta=cats, fill='toself', name=pedra, line_color=CORES_PEDRAS.get(pedra, '#95A5A6')))
+        fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 10])), template='plotly_white', height=400, legend=dict(orientation='h', yanchor='bottom', y=-0.15, xanchor='center', x=0.5))
+        st.plotly_chart(fig_radar, use_container_width=True)
+        st.markdown("""<div class="insight-box"><p>💡 <strong>Insight:</strong> O radar revela como Topázio se destaca em todas as dimensões, enquanto Quartzo apresenta perfil achatado — indicando necessidade de intervenção multidimensional nos níveis iniciais.</p></div>""", unsafe_allow_html=True)
+
+    with col_alertas:
+        st.markdown("""<h3 style='color:var(--pm-roxo);'>🚨 Alunos que Precisam de Atenção</h3><p style='color:var(--pm-texto-leve); font-size:0.82rem; margin-bottom:0.8rem;'>Top 10 com maiores sinais de risco</p>""", unsafe_allow_html=True)
+        df_risco = df_xlsx.copy()
+        df_risco['SCORE_RISCO'] = 0
+        for col_r, thr in [('IEG', 5.5), ('IPS', 5.0), ('IDA', 5.5), ('INDE', 5.0)]:
+            if col_r in df_risco.columns:
+                df_risco['SCORE_RISCO'] += (df_risco[col_r] < thr).astype(int)
+        if 'DEFASAGEM' in df_risco.columns:
+            df_risco['SCORE_RISCO'] += (df_risco['DEFASAGEM'] < 0).astype(int)
+        top_risco = df_risco.nlargest(10, 'SCORE_RISCO')[['NOME', 'INDE', 'IDA', 'IEG', 'SCORE_RISCO']].reset_index(drop=True)
+        for _, row in top_risco.iterrows():
+            sinais = int(row['SCORE_RISCO'])
+            if sinais >= 4:
+                cor_borda, nivel = '#C0392B', '🔴 Crítico'
+            elif sinais >= 3:
+                cor_borda, nivel = '#E74C3C', '🟠 Alto'
+            elif sinais >= 2:
+                cor_borda, nivel = '#F39C12', '🟡 Moderado'
+            else:
+                cor_borda, nivel = '#95A5A6', '⚪ Baixo'
+            nome_d = str(row['NOME'])[:20]
+            inde_v = row['INDE'] if pd.notna(row['INDE']) else 0
+            ida_v = row['IDA'] if pd.notna(row['IDA']) else 0
+            ieg_v = row['IEG'] if pd.notna(row['IEG']) else 0
+            st.markdown(f"""<div style='background:white; border-left:4px solid {cor_borda}; border-radius:8px; padding:0.5rem 0.8rem; margin-bottom:0.4rem; box-shadow:0 1px 4px rgba(0,0,0,0.06);'><div style='display:flex; justify-content:space-between; align-items:center;'><div><div style='font-size:0.78rem; font-weight:700; color:var(--pm-texto);'>{nome_d}</div><div style='font-size:0.65rem; color:var(--pm-texto-leve);'>INDE: {inde_v:.2f} · IDA: {ida_v:.1f} · IEG: {ieg_v:.1f}</div></div><div style='font-size:0.7rem; font-weight:700;'>{nivel}</div></div></div>""", unsafe_allow_html=True)
+        total_critico = len(df_risco[df_risco['SCORE_RISCO'] >= 3])
+        st.markdown(f"""<div class="insight-box" style='margin-top:0.6rem;'><p>⚠️ <strong>{total_critico} alunos</strong> apresentam 3+ sinais de risco simultâneos e necessitam intervenção prioritária.</p></div>""", unsafe_allow_html=True)
 
 # =============================================================================
 # PÁGINA: ANÁLISE POR INDICADOR
