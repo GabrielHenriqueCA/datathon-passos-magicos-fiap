@@ -343,18 +343,18 @@ def _render_treino_resultado(sk, aluno_key, g):
     barra_pct = int((acertos / 10) * 100)
 
     st.markdown(f"""
-    <div class='aluno-card' style='text-align:center; padding:1.5rem;'>
-        <div style='font-size:3.5rem; display:inline-block; animation:{anim} 0.6s ease;'>🦉</div>
-        <div style='font-size:1.5rem; font-weight:800; color:#E8EDF2; margin-top:0.5rem;'>{acertos} / 10</div>
-        <div style='font-size:0.85rem; color:#8AAFC7; margin-top:0.3rem;'>{msg}</div>
-        {badge_html}
-        <div style='margin:1rem 0 0.3rem; font-size:0.72rem; color:#8AAFC7; text-transform:uppercase; letter-spacing:1px;'>Desempenho</div>
-        <div style='background:#0D1B2A; border-radius:8px; height:10px; overflow:hidden;'>
-            <div style='background:#F4A261; height:100%; width:{barra_pct}%; border-radius:8px;'></div>
-        </div>
-        <div style='margin-top:0.8rem; font-size:1.1rem; font-weight:800; color:#F4A261;'>+{xp} XP 🚀</div>
-    </div>
-    """, unsafe_allow_html=True)
+<div class='aluno-card' style='text-align:center; padding:1.5rem;'>
+    <div style='font-size:3.5rem; display:inline-block; animation:{anim} 0.6s ease;'>🦉</div>
+    <div style='font-size:1.5rem; font-weight:800; color:#E8EDF2; margin-top:0.5rem;'>{acertos} / 10</div>
+    <div style='font-size:0.85rem; color:#8AAFC7; margin-top:0.3rem;'>{msg}</div>
+    {badge_html}
+<div style='margin:1rem 0 0.3rem; font-size:0.72rem; color:#8AAFC7; text-transform:uppercase; letter-spacing:1px;'>Desempenho</div>
+<div style='background:#0D1B2A; border-radius:8px; height:10px; overflow:hidden;'>
+    <div style='background:#F4A261; height:100%; width:{barra_pct}%; border-radius:8px;'></div>
+</div>
+<div style='margin-top:0.8rem; font-size:1.1rem; font-weight:800; color:#F4A261;'>+{xp} XP 🚀</div>
+</div>
+""", unsafe_allow_html=True)
 
     col_r1, col_r2 = st.columns(2)
     with col_r1:
