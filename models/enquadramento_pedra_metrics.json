@@ -1,0 +1,13 @@
+{
+  "melhor_nome": "Random Forest",
+  "acc_treino": 0.8833819241982507,
+  "acc_teste": 0.7906976744186046,
+  "f1_weighted": 0.7873952813848614,
+  "roc_auc": 0.9289407050115259,
+  "classes": [
+    "Ametista",
+    "Quartzo",
+    "Top\u00e1zio",
+    "\u00c1gata"
+  ]
+}

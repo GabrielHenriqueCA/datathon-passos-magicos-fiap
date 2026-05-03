@@ -1,0 +1,13 @@
+{
+  "acc_treino": 0.8120567375886525,
+  "acc_teste": 0.8021201413427562,
+  "f1_score": 0.7407407407407407,
+  "recall": 0.8,
+  "precision": 0.6896551724137931,
+  "roc_auc": 0.8779234972677595,
+  "cv_auc_mean": 0.8309470725232148,
+  "cv_auc_std": 0.039085016327241096,
+  "opcao": "A - evasao real (ausencia no ano seguinte)",
+  "n_casos_positivos": 499,
+  "n_total": 1411
+}

@@ -5,7 +5,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.3%2B-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
 [![Audit](https://img.shields.io/badge/Audit-85%2F85_✓-2ECC71?style=for-the-badge)](#-validation-and-audit)
-[![F1-Score](https://img.shields.io/badge/F1--Score-82.5%25-6C3483?style=for-the-badge)](#-predictive-model)
+[![F1-Score](https://img.shields.io/badge/F1--Score-77.8%25-6C3483?style=for-the-badge)](#-predictive-model)
 [![FIAP](https://img.shields.io/badge/FIAP-PosTech_Phase_5-ED2C2C?style=for-the-badge)](https://www.fiap.com.br/)
 
 ---
@@ -34,7 +34,7 @@
 
 ## 📌 Overview
 
-This project implements a **complete Data Analytics and Machine Learning solution** for the **FIAP PosTech Phase 5 Datathon**, in partnership with **Associação Passos Mágicos** — an NGO that has worked for over 35 years on the social transformation of children and young people in Embu-Guaçu/SP, Brazil.
+This project implements a **complete Data Analytics and Machine Learning solution** for the **FIAP PosTech Phase 5 Datathon**, in partnership with **Associação Passos Mágicos** — an NGO that has worked for over 33 years on the social transformation of children and young people in Embu-Guaçu/SP, Brazil.
 
 > [!IMPORTANT]
 > **Pedagogical Approach:** The predictive model was designed to identify students at **risk of academic lag** using exclusively behavioral and pedagogical indicators — without variables that mathematically derive from the lag itself. The solution aims to support the Passos Mágicos team with **early, data-driven interventions** before the situation worsens.
@@ -46,11 +46,11 @@ The solution addresses a core challenge: with **69.9% of students experiencing s
 ## 🚀 TL;DR
 
 - **End-to-end pipeline** for data analysis and ML in social education
-- **F1-Score of 82.5%** with Gradient Boosting — legitimate result, no data leakage
+- **F1-Score of 77.8%** with Random Forest (balanced precision/recall at threshold=0.45) — legitimate result, no data leakage
 - **Complete audit**: 85/85 integrity checks passed
 - **11 questions** from the Datathon answered with interactive visualizations (Plotly)
 - **Streamlit dashboard** with real-time individual prediction
-- **4 years of data** analyzed (PEDE 2020–2024), 860+ students
+- **5 years of PEDE data** (2020–2024, excl. 2023): CSV covers 2020–2022, XLSX covers 2022 and 2024; 860+ students
 
 ---
 
@@ -65,7 +65,7 @@ The solution addresses a core challenge: with **69.9% of students experiencing s
 
 ## 🎯 Objectives
 
-✅ **Analyze 4 years of PEDE indicators** (2020, 2021, 2022, and 2024)
+✅ **Analyze 5 years of PEDE data** (2020–2024, excl. 2023 — CSV covers 2020–2022, XLSX covers 2022 and 2024)
 ✅ **Answer the 11 Datathon questions** with robust analyses and visualizations
 ✅ **Build a legitimate predictive model** for academic lag risk (no data leakage)
 ✅ **Validate the pipeline** with a forensic audit of 85 checks
@@ -93,8 +93,8 @@ graph TB
 
     subgraph "3. Predictive Modeling (model.py)"
         F -->|Stratified 80/20 Split| G[Train and<br/>Test Sets]
-        G -->|5-fold Cross-Validation| H[(Gradient Boosting<br/>Classifier)]
-        H -->|Hyperparameter Tuning| I[Optimized Model<br/>F1 = 82.5%]
+        G -->|5-fold Cross-Validation| H[(Random Forest<br/>Classifier)]
+        H -->|Threshold Calibration| I[Optimized Model<br/>F1 = 77.8%]
     end
 
     subgraph "4. Presentation (app.py)"
@@ -127,7 +127,7 @@ graph TB
 
 #### **Interface Layer** 🎨
 - `app.py`: Streamlit dashboard — **only consumes `.joblib` files**, never trains
-- 7 tabs: Overview, Indicators (8 sub-analyses), Predictive Model, Best Subject, Churn, Academic Alert, Results & Insights
+- 7 pages via sidebar: Apresentação, Visão Geral, Análise por Indicador, Modelos Preditivos, Risco de Evasão, Visão 360° do Aluno, Predição Individual
 - Individual prediction with probability gauge and automatic recommendations
 
 ---
@@ -174,7 +174,7 @@ Datathon/
 │   └── churn_metrics.json
 │
 ├── 📂 notebooks/                 ← Exploratory analysis + documented training
-│   └── Analise_Completa_Passos_Magicos.ipynb ← EDA for 11 questions + 3 models
+│   └── Analise_Completa_Passos_Magicos.ipynb ← EDA for 11 questions + 4 models
 │
 └── 📂 docs/                      ← Reference documentation
     ├── POSTECH - Datathon - Fase 5 (1).pdf  ← Official case brief
@@ -351,25 +351,39 @@ pip install -r requirements.txt
 python train_model.py
 ```
 
-**Expected output:**
+**Expected output (abbreviated):**
 ```
+************************************************************
+  DATATHON PASSOS MAGICOS -- Treinamento dos Modelos
+************************************************************
+
 ============================================================
-DATATHON PASSOS MÁGICOS - Predictive Model Training
+  MODELO 1 -- Risco de Defasagem
 ============================================================
+  Dados: 860 alunos  |  Em risco (1): 601  |  Sem risco (0): 259
+  Treinando Random Forest com threshold calibrado por F1 (CV)...
+  Accuracy Teste: 0.6977  |  F1: 0.8219  |  AUC: 0.6603
+  Salvo em: models/risco_defasagem.joblib
 
-📊 Loading data...
-   Dataset loaded: 860 students, 43 columns
+============================================================
+  MODELO 2 -- Enquadramento de Pedra (sem leakage)
+============================================================
+  Melhor modelo: Random Forest
+  Accuracy Teste: 0.7907  |  F1 Weighted: 0.7874  |  AUC: 0.9289
+  Salvo em: models/enquadramento_pedra.joblib
 
-🔧 Preparing data for modeling...
-   Features: ['IAA', 'IEG', 'IPS', 'IDA', 'IPV', 'FASE', 'ANOS_PM', 'GENERO_NUM', 'PV_NUM']
-   Distribution: No risk (0): 259  |  At risk (1): 601
+============================================================
+  MODELO 3 -- Ponto de Virada (sem IPV, sem INDE)
+============================================================
+  Melhor modelo: Gradient Boosting
+  Accuracy Teste: 0.9012  |  F1: 0.5143  |  AUC: 0.8614
+  Salvo em: models/ponto_virada.joblib
 
-🤖 Training models...
-   BEST MODEL: Gradient Boosting (F1: 0.8253)
-
-💾 Saving model...
-   Model saved: models/modelo_risco.joblib
-✅ Training completed successfully!
+============================================================
+  MODELO 4 -- Risco de Evasão (target real)
+============================================================
+  Accuracy Teste: 0.8021  |  F1: 0.7407  |  AUC: 0.8779
+  Salvo em: models/churn.joblib
 ```
 
 > ⏱️ Estimated time: 30–90 seconds.
@@ -383,11 +397,14 @@ python -m streamlit run app.py
 > 🌐 Access at **[http://localhost:8501](http://localhost:8501)**
 
 > [!IMPORTANT]
-> Run `train_model.py` **before** the dashboard. Without the `models/modelo_risco.joblib` file, the individual prediction tab will not work.
+> Run `train_model.py` **before** the dashboard. Without the `.joblib` files in `models/`, the predictive model tabs will not work.
 
 ---
 
 ## 🤖 Predictive Model
+
+> [!NOTE]
+> These models are designed as **decision-support tools** to augment human judgment, not replace it. Each model has documented limitations and should be used as one input among many in the educator's pedagogical decision-making process.
 
 ### Problem Definition
 
@@ -396,10 +413,10 @@ TARGET:  RISCO = 1  →  DEFASAGEM < 0  (student is behind expected level)
          RISCO = 0  →  DEFASAGEM ≥ 0  (student is at or ahead of level)
 
 Distribution: 69.9% at risk  |  30.1% no risk  (imbalanced 2.3:1)
-Treatment:    class_weight='balanced' (RF, LR) | scale_pos_weight (XGBoost)
+Treatment:    class_weight='balanced' (Random Forest)
 ```
 
-### Model Features (9 variables)
+### Model Features (14 variables)
 
 | Feature | Type | Scale | Description |
 |---------|------|:-----:|-------------|
@@ -412,6 +429,11 @@ Treatment:    class_weight='balanced' (RF, LR) | scale_pos_weight (XGBoost)
 | `ANOS_PM` | int | 0–6 | Years in the association |
 | `GENERO_NUM` | int | 0 / 1 | Gender (0=Female, 1=Male) |
 | `PV_NUM` | int | 0 / 1 | Reached turning point (0=No, 1=Yes) |
+| `SCORE_COMPORTAMENTAL` | float | 0–10 | Engineered: mean of IAA, IEG, IPS |
+| `GAP_IAA_IDA` | float | −10–10 | Engineered: self-assessment minus actual performance |
+| `IEG_POR_FASE` | float | — | Engineered: IEG normalized by phase |
+| `IEG_X_IPV` | float | — | Engineered: engagement × turning point interaction |
+| `IDA_X_ANOS` | float | — | Engineered: performance × years in program interaction |
 
 ### ⚠️ Features Excluded Due to Data Leakage
 
@@ -428,43 +450,50 @@ Treatment:    class_weight='balanced' (RF, LR) | scale_pos_weight (XGBoost)
 
 After removal: **maximum residual correlation = |r| = 0.14** (confirmed by audit).
 
-### Results — Model Comparison
+### Results — Risco de Defasagem Model
 
-| Model | Accuracy | Precision | Recall | **F1-Score** | ROC-AUC | CV F1 |
-|-------|:--------:|:---------:|:------:|:------------:|:-------:|:-----:|
-| **Gradient Boosting** 🏆 | 72.7% | 74.5% | **92.5%** | **82.5%** | 68.1% | **81.6% ± 1.6%** |
-| Random Forest | 63.4% | 75.2% | 70.8% | 73.0% | 66.6% | 73.7% ± 2.9% |
-| XGBoost | 61.6% | 75.5% | 66.7% | 70.8% | 65.4% | 72.3% ± 3.8% |
-| Logistic Regression | 52.3% | 72.6% | 50.8% | 59.8% | 53.7% | 62.6% ± 6.1% |
+| Metric | Value |
+|--------|:-----:|
+| Accuracy (train) | 77.9% |
+| **Accuracy (test)** | **67.4%** |
+| Train/Test gap | 10.5 pp |
+| **F1-Score** | **77.8%** |
+| **Recall** | **81.7%** |
+| Precision | 74.2% |
+| **ROC-AUC** | **66.0%** |
+| CV F1 (train) | 73.3% ± 4.3% |
+| Threshold | 0.45 (balanced precision/recall) |
 
-> **Why prioritize Recall?** Failing to identify an at-risk student (false negative) means depriving them of pedagogical support. Gradient Boosting with **Recall of 92.5%** minimizes this error — which is the most costly in an educational context.
+> **Threshold choice:** threshold=0.45 was chosen deliberately to balance precision and recall. An earlier calibration at threshold=0.20 produced Recall=100% but at the cost of effectively classifying all students as at-risk — providing no discriminative value. At 0.45, the model identifies **81.7% of at-risk students** while maintaining **74.2% precision**, making it a practical triage tool rather than a uniform flag.
 
-### Feature Importance (Gradient Boosting)
+### Feature Importance (Random Forest — top contributors)
 
-```
-FASE         ████████████████████████████ 27.6%   ← phase + low performance = higher risk
-IEG          ██████████████████ 18.2%             ← disengagement = early warning signal
-IPV          █████████████████ 17.3%              ← no turning point → risk accumulates
-IDA          ████████████ 12.0%                   ← consequence, not cause
-IAA          █████████ 8.9%                       ← low self-esteem precedes dropout
-ANOS_PM      █████████ 8.7%                       ← time changes the risk profile
-IPS          ██████ 5.6%                          ← social vulnerability mediated
-GENERO_NUM   ██ 1.6%
-PV_NUM       ▏ 0.0%
-```
+The exact percentages are printed when running `train_model.py`. Consistently, the highest-importance features are:
+
+| Rank | Feature | Insight |
+|------|---------|---------|
+| 1 | `FASE` | Higher phase + low performance = accumulated risk |
+| 2 | `IEG` | Disengagement is the earliest observable warning signal |
+| 3 | `IDA_X_ANOS` | Long-stagnant academic performance compounds over time |
+| 4 | `IDA` | Direct measure of academic difficulty |
+| 5 | `SCORE_COMPORTAMENTAL` | Composite behavioral signal (IAA + IEG + IPS) |
+| 6 | `IPV` | No turning point → risk keeps accumulating |
+| 7 | `IEG_X_IPV` | Interaction: low engagement AND no turning point = highest risk |
+| … | `IAA`, `IPS`, `ANOS_PM`, `GAP_IAA_IDA`, … | Secondary contributors |
 
 ### Best Model Hyperparameters
 
 ```python
-GradientBoostingClassifier(
-    n_estimators      = 100,   # number of trees
-    max_depth         = 3,     # maximum depth (conservative)
-    learning_rate     = 0.05,  # learning step
-    min_samples_split = 10,    # minimum to split a node
-    min_samples_leaf  = 5,     # minimum per leaf — implicit regularization
-    subsample         = 0.8,   # stochastic sampling
-    random_state      = 42
+RandomForestClassifier(
+    n_estimators  = 300,        # number of trees
+    max_depth     = 4,          # maximum depth (conservative for 860 samples)
+    min_samples_leaf = 5,       # implicit regularization
+    class_weight  = 'balanced', # handles 70/30 imbalance
+    random_state  = 42,
+    n_jobs        = -1
 )
+# Threshold: 0.45 — selected to balance precision and recall
+# (search range restricted to [0.45, 0.80] to prevent "predict-all-positive" solutions)
 ```
 
 ---
@@ -492,7 +521,7 @@ GradientBoostingClassifier(
 | `ANOS_PM` — calculation consistency | 2 | ✅ |
 | Categorical encoding (GENERO, PV) | 6 | ✅ |
 | Binary target (RISCO) | 2 | ✅ |
-| `criar_dataset_modelo()` — 9 features without leakage | 15 | ✅ |
+| `criar_dataset_modelo()` — 14 features without leakage | 15 | ✅ |
 | Residual leakage detector (correlations) | 9 | ✅ |
 | Train/test split — stratification and overlap | 2 | ✅ |
 | Final cross-validation sanity check | 3 | ✅ |
@@ -520,7 +549,7 @@ Total checks: 85
 | 6 | Does IPP confirm the lag identified by IAN? | IPP | Cross-analysis of psychopedagogical confirmation |
 | 7 | What most influences the Turning Point? | IPV | IDA and IEG are the biggest drivers of IPV |
 | 8 | What combination of indicators raises INDE? | INDE | Radar by Pedra reveals distinct behavioral profiles |
-| 9 | Can ML identify at-risk students? | ML | Gradient Boosting: F1=82.5%, Recall=92.5% |
+| 9 | Can ML identify at-risk students? | ML | Random Forest: F1=77.8%, Recall=81.7%, Precision=74.2% (threshold=0.45) |
 | 10 | Does the program promote progression between Pedras? | Pedras | Longitudinal analysis Quartzo → Ametista → Topázio |
 | 11 | Are there differences by gender, phase, and tenure? | All | Segmented analyses reveal distinct demographic patterns |
 
@@ -528,14 +557,14 @@ Total checks: 85
 
 ## 🧠 Technical Decisions
 
-### 1. Gradient Boosting as final model
+### 1. Random Forest with balanced threshold as final model
 
-**Decision**: Use Gradient Boosting instead of XGBoost (2nd best option)
+**Decision**: Use Random Forest with threshold=0.45 (balanced precision/recall)
 **Rationale**:
-- ✅ **Best F1** (82.5% vs 70.8%) and **best stability** in CV (±1.6%)
-- ✅ **Recall of 92.5%** — critical for not missing at-risk students
-- ✅ **No need for scale_pos_weight** — model naturally robust to imbalance
-- ✅ **Lower CV variance** — more reliable generalization
+- ✅ **F1=77.8%** with practical discrimination — identifies 81.7% of at-risk students at 74.2% precision
+- ✅ Threshold floor of 0.45 prevents the "predict-all-positive" solution that maximizes F1 mechanically on imbalanced data (69.9% positive) but has no real discriminative value
+- ✅ `class_weight='balanced'` handles the 70/30 imbalance natively
+- ✅ AUC=66.0% is modest — this model is designed as a **triage tool**, not a precise prioritization system
 
 ### 2. Binary target instead of multi-class
 
@@ -547,10 +576,10 @@ Total checks: 85
 
 ### 3. Conservative hyperparameters
 
-**Decision**: `max_depth=3`, `min_samples_leaf=5` (more conservative than default)
+**Decision**: `max_depth=4`, `min_samples_leaf=5` (more conservative than default)
 **Rationale**:
 - Small dataset (860 records): aggressive parameters lead to overfitting
-- Low standard deviation in CV (±1.6%) confirms good generalization
+- CV std (±4.3%) and train/test gap (10.5 pp at threshold=0.45) reflect the inherent variance of an 860-sample dataset — documented as a known limitation
 
 ### 4. No user data persistence
 
@@ -570,6 +599,16 @@ Total checks: 85
 - **PONTO_VIRADA with low importance** (0.0%): only 13.1% of students reached PV, making this feature minimally discriminative in the current dataset
 - **Generalization**: Results obtained exclusively with Passos Mágicos data from Embu-Guaçu — may not generalize to other educational contexts without retraining
 
+### Known Limitations Acknowledged During Development
+
+- **Defasagem Risk model — modest discrimination (AUC=0.66):** The model works as a broad triage tool, not as a precise prioritization mechanism. Threshold=0.45 was chosen deliberately to balance precision (74.2%) and recall (81.7%), avoiding a degenerate solution where all students are flagged as at-risk. A production deployment would benefit from more samples and temporal validation.
+
+- **Turning Point model — low F1 due to class imbalance:** F1=51.4% reflects the 87%/13% class split. The model identifies fewer than 4 in 10 students who actually reach the Turning Point (Recall=39.1%). It is documented here as exploratory — the AUC=86.1% confirms genuine discriminative signal, but reliable individual prediction requires more positive examples.
+
+- **Temporal validation absent:** Train and test sets come from the same temporal snapshot. A production deployment should validate on a future cohort (e.g., train on 2022 data, test on 2024 outcomes) before being used for individual student decisions.
+
+- **Indirect leakage risk in Pedra Classification (AUC=0.93):** INDE and IAN were explicitly removed, but the behavioral features used (IAA, IEG, IPS, IDA, IPV) are the components that mathematically compose INDE. The relationship is indirect but non-zero — the high AUC should be interpreted with this caveat.
+
 ---
 
 ## 📦 Datathon Deliverables
@@ -587,7 +626,7 @@ Total checks: 85
 
 **Model does not load in the dashboard:**
 ```bash
-python train_model.py   # generates models/modelo_risco.joblib
+python train_model.py   # generates risco_defasagem.joblib, enquadramento_pedra.joblib, ponto_virada.joblib, churn.joblib
 ```
 
 **`streamlit` not recognized:**

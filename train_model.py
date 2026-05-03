@@ -95,9 +95,9 @@ def pedra_para_num(serie):
     return serie.map(PEDRA_ORD)
 
 
-def calibrar_threshold_por_f1(modelo, X_tr, y_tr, cv, usa_scale, scaler=None):
+def calibrar_threshold_por_f1(modelo, X_tr, y_tr, cv, usa_scale, scaler=None, min_thresh=0.20):
     """Threshold que maximiza F1 via CV no conjunto de treino (sem data leakage do teste)."""
-    thresholds = np.linspace(0.20, 0.80, 61)
+    thresholds = np.linspace(min_thresh, 0.80, max(2, int((0.80 - min_thresh) * 60) + 1))
     fold_f1s   = {t: [] for t in thresholds}
     for tr_idx, val_idx in cv.split(X_tr, y_tr):
         Xf, Xv = X_tr[tr_idx], X_tr[val_idx]
@@ -162,8 +162,9 @@ def treinar_risco_defasagem():
         class_weight='balanced', random_state=42, n_jobs=-1
     )
 
-    print("\n  Treinando Random Forest com threshold calibrado por F1 (CV)...")
-    threshold = calibrar_threshold_por_f1(rf, X_tr, y_tr, cv, usa_scale=False)
+    print("\n  Treinando Random Forest com threshold calibrado por F1 (CV, min=0.45)...")
+    # min_thresh=0.45: force balanced precision/recall tradeoff (avoid "predict all positive" trap)
+    threshold = calibrar_threshold_por_f1(rf, X_tr, y_tr, cv, usa_scale=False, min_thresh=0.45)
 
     # Treinar no conjunto completo de treino
     rf.fit(X_tr, y_tr)
