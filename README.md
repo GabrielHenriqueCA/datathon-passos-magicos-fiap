@@ -7,6 +7,7 @@
 [![Audit](https://img.shields.io/badge/Audit-85%2F85_✓-2ECC71?style=for-the-badge)](#-validation-and-audit)
 [![F1-Score](https://img.shields.io/badge/F1--Score-77.8%25-6C3483?style=for-the-badge)](#-predictive-model)
 [![FIAP](https://img.shields.io/badge/FIAP-PosTech_Phase_5-ED2C2C?style=for-the-badge)](https://www.fiap.com.br/)
+[![Live App](https://img.shields.io/badge/🚀_Live_App-Streamlit_Cloud-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://datathon-paapps-magicos-fiap-yzjr4kfwdkw22aoqwd7wva.streamlit.app/)
 
 ---
 
@@ -613,9 +614,12 @@ Total checks: 85
 
 ## 📦 Datathon Deliverables
 
+> [!TIP]
+> **🚀 Streamlit Production App:** [Open Live App ↗](https://datathon-paapps-magicos-fiap-yzjr4kfwdkw22aoqwd7wva.streamlit.app/)
+
 - [x] 🔗 Complete code on GitHub (cleaning, analysis, and modeling)
 - [x] 📓 Exploratory notebook with EDA and predictive model
-- [x] 🖥️ Streamlit application with real-time individual prediction
+- [x] 🖥️ Streamlit application with real-time individual prediction — **[Open Live App ↗](https://datathon-paapps-magicos-fiap-yzjr4kfwdkw22aoqwd7wva.streamlit.app/)**
 - [x] 🔬 Complete pipeline integrity audit (85/85 ✓)
 - [x] 📊 Storytelling presentation (PPT/PDF)
 - [x] 🎬 Video presentation (up to 5 minutes)
