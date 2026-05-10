@@ -119,6 +119,10 @@ graph TB
     style L fill:#1565c0,stroke:#0d47a1,stroke-width:2px,color:#fff
 ```
 
+### Architecture Overview
+
+![Solution Architecture](docs/arch_project.png)
+
 ### Application Layers
 
 #### **Training Layer** 🤖
